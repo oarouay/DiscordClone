@@ -136,3 +136,110 @@ body {
 .auth-link:hover {
   text-decoration: underline;
 }
+
+.app-shell {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.app-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: var(--bg-primary);
+}
+
+.guild-sidebar {
+  width: 72px;
+  min-width: 72px;
+  background-color: var(--bg-tertiary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 0;
+  gap: 8px;
+  overflow-y: auto;
+}
+
+.guild-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+  text-decoration: none;
+  transition: border-radius 0.15s ease, background-color 0.15s ease;
+}
+
+.guild-icon:hover {
+  border-radius: 30%;
+  background-color: var(--accent);
+}
+
+.channel-sidebar {
+  width: 240px;
+  min-width: 240px;
+  background-color: var(--bg-secondary);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.channel-sidebar-header {
+  height: 48px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.channel-list {
+  list-style: none;
+  padding: 8px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+}
+
+.channel-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 15px;
+  transition: background-color 0.1s ease, color 0.1s ease;
+}
+
+.channel-item:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.channel-item-active {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.empty-state {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 15px;
+}

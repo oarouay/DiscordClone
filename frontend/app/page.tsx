@@ -11,7 +11,7 @@ export default function RootPage() {
   useEffect(() => {
     if (isLoading) return;
     if (user) {
-      router.replace("/channels/@me");
+      router.replace("/channels/me");
     } else {
       router.replace("/login");
     }

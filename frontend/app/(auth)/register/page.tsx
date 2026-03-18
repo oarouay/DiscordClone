@@ -39,7 +39,7 @@ export default function RegisterPage() {
         password,
       });
       login(data.token, data.user);
-      router.replace("/channels/@me");
+      router.replace("/channels/me");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
