@@ -11,6 +11,8 @@ export type Guild = {
   name: string;
   iconUrl?: string;
   ownerId: string;
+  guildType: "HOUSE" | "CRIB";
+  isPrivate: boolean;
   channels: Channel[];
   members: Member[];
 };
@@ -20,6 +22,8 @@ export type Channel = {
   guildId: string;
   name: string;
   type: "TEXT" | "VOICE";
+  category?: string; // "Rooms" or "Calls"
+  subType?: "ANNOUNCEMENTS" | "FORUMS" | "DEFAULT";
   position: number;
 };
 

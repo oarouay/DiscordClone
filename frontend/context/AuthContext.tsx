@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { getToken, setToken, clearToken, isTokenExpired } from "@/lib/auth";
+import { mockUser } from "@/lib/mock";
 import type { User } from "@/types";
 
 type AuthContextValue = {
@@ -25,6 +26,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (!stored || isTokenExpired(stored)) {
       clearToken();
+      // TODO: remove mockUser fallback when backend is ready
+      setUser(mockUser);
       setIsLoading(false);
       return;
     }
@@ -35,8 +38,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .get<User>("/users/me")
       .then((me) => setUser(me))
       .catch(() => {
-        clearToken();
-        setTokenState(null);
+        // TODO: replace with proper error handling when backend is ready
+        setUser(mockUser);
       })
       .finally(() => setIsLoading(false));
   }, []);

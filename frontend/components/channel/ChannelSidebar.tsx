@@ -1,9 +1,10 @@
 "use client";
 
-import Link from "next/link";
+import { useState } from "react";
 import { useParams } from "next/navigation";
-import { Hash, Volume2 } from "lucide-react";
 import { mockGuilds } from "@/lib/mock";
+import { ChannelList } from "./ChannelList";
+import type { Channel } from "@/types";
 
 export function ChannelSidebar() {
   const params = useParams();
@@ -12,30 +13,33 @@ export function ChannelSidebar() {
 
   const guild = mockGuilds.find((g) => g.id === guildId);
 
+  const handleCreateChannel = async (name: string, type: "TEXT" | "VOICE", category: string) => {
+    // TODO: replace with API call to POST /guilds/:guildId/channels
+    if (guild) {
+      const newChannel: Channel = {
+        id: String(Date.now()),
+        guildId: guild.id,
+        name,
+        type,
+        category,
+        subType: type === "TEXT" ? "DEFAULT" : undefined,
+        position: guild.channels.length,
+      };
+      guild.channels.push(newChannel);
+    }
+  };
+
   if (!guild) {
     return <aside className="channel-sidebar" />;
   }
 
   return (
-    <aside className="channel-sidebar">
-      <div className="channel-sidebar-header">{guild.name}</div>
-      <ul className="channel-list">
-        {guild.channels.map((channel) => (
-          <li key={channel.id}>
-            <Link
-              href={`/guilds/${guild.id}/${channel.id}`}
-              className={`channel-item ${channelId === channel.id ? "channel-item-active" : ""}`}
-            >
-              {channel.type === "VOICE" ? (
-                <Volume2 size={16} />
-              ) : (
-                <Hash size={16} />
-              )}
-              {channel.name}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </aside>
+    <ChannelList
+      channels={guild.channels}
+      guildId={guild.id}
+      guildName={guild.name}
+      currentChannelId={channelId}
+      onCreateChannel={handleCreateChannel}
+    />
   );
 }
