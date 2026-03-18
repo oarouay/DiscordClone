@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import type { Guild } from "@/types";
 import { GuildIcon } from "./GuildIcon";
 import { CreateGuildModal } from "./CreateGuildModal";
@@ -28,8 +27,8 @@ export function GuildSidebar({
     <>
       <div className="w-24 bg-bg-tertiary border-r border-border flex flex-col items-center py-6 gap-6 h-screen overflow-y-auto">
         {/* DMs/Condos */}
-        <Link
-          href="/channels/@me"
+        <button
+          onClick={() => onGuildSelect("")}
           className={`
             w-16 h-16 rounded-full flex items-center justify-center
             transition-all duration-200 flex-shrink-0
@@ -39,9 +38,10 @@ export function GuildSidebar({
                 : "bg-bg-secondary hover:bg-bg-primary hover:rounded-3xl"
             }
           `}
+          title="Direct Messages"
         >
           <span className="text-2xl">💬</span>
-        </Link>
+        </button>
 
         <div className="w-10 h-px bg-border" />
 
@@ -89,9 +89,6 @@ export function GuildSidebar({
           ))}
         </div>
 
-        {/* Spacer */}
-        <div className="flex-1" />
-
         {/* Create Guild Button */}
         <button
           onClick={() => setShowCreateModal(true)}
@@ -99,7 +96,7 @@ export function GuildSidebar({
             w-16 h-16 rounded-full flex items-center justify-center
             bg-bg-secondary hover:bg-accent hover:rounded-3xl
             transition-all duration-200
-            text-2xl flex-shrink-0
+            text-2xl flex-shrink-0 mt-auto
           "
           title="Create Server"
         >
