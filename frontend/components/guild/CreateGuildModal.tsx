@@ -45,17 +45,14 @@ export function CreateGuildModal({
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-bg-floating rounded-lg shadow-lg max-w-md w-full mx-4">
-        <div className="p-8">
-          <h2 className="text-2xl font-bold text-text-primary mb-2">
+        <div className="p-6">
+          <h2 className="text-xl font-bold text-text-primary mb-4">
             Create a New Server
           </h2>
-          <p className="text-text-muted text-sm mb-8">
-            Start a new House (private) or Crib (public) community
-          </p>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-text-secondary mb-3 uppercase tracking-wide">
+              <label className="block text-sm font-medium text-text-secondary mb-2">
                 Server Name
               </label>
               <input
@@ -64,52 +61,52 @@ export function CreateGuildModal({
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. My Awesome Server"
                 className="
-                  w-full px-4 py-3 bg-bg-primary border border-border
-                  rounded-lg text-text-primary placeholder-text-muted text-base
+                  w-full px-3 py-2 bg-bg-primary border border-border
+                  rounded text-text-primary placeholder-text-muted
                   focus:outline-none focus:border-accent
                 "
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-text-secondary mb-4 uppercase tracking-wide">
+              <label className="block text-sm font-medium text-text-secondary mb-3">
                 Server Type
               </label>
-              <div className="space-y-3">
-                <label className="flex items-start gap-4 cursor-pointer p-4 rounded-lg hover:bg-bg-primary/50 transition-colors">
+              <div className="space-y-2">
+                <label className="flex items-center gap-3 cursor-pointer">
                   <input
                     type="radio"
                     name="guildType"
                     value="HOUSE"
                     checked={guildType === "HOUSE"}
                     onChange={(e) => setGuildType(e.target.value as "HOUSE" | "CRIB")}
-                    className="w-5 h-5 mt-0.5"
+                    className="w-4 h-4"
                   />
                   <div>
-                    <p className="text-base font-semibold text-text-primary">
+                    <p className="text-sm font-medium text-text-primary">
                       🔒 House (Private)
                     </p>
-                    <p className="text-sm text-text-muted mt-1">
-                      Invite-only community for close friends
+                    <p className="text-xs text-text-muted">
+                      Invite-only community
                     </p>
                   </div>
                 </label>
 
-                <label className="flex items-start gap-4 cursor-pointer p-4 rounded-lg hover:bg-bg-primary/50 transition-colors">
+                <label className="flex items-center gap-3 cursor-pointer">
                   <input
                     type="radio"
                     name="guildType"
                     value="CRIB"
                     checked={guildType === "CRIB"}
                     onChange={(e) => setGuildType(e.target.value as "HOUSE" | "CRIB")}
-                    className="w-5 h-5 mt-0.5"
+                    className="w-4 h-4"
                   />
                   <div>
-                    <p className="text-base font-semibold text-text-primary">
+                    <p className="text-sm font-medium text-text-primary">
                       🌍 Crib (Public)
                     </p>
-                    <p className="text-sm text-text-muted mt-1">
-                      Community anyone can join and discover
+                    <p className="text-xs text-text-muted">
+                      Community anyone can join
                     </p>
                   </div>
                 </label>
@@ -117,17 +114,17 @@ export function CreateGuildModal({
             </div>
 
             {error && (
-              <div className="bg-danger/20 border border-danger rounded-lg text-danger text-sm p-4">
+              <div className="bg-danger/20 border border-danger rounded text-danger text-sm p-2">
                 {error}
               </div>
             )}
 
-            <div className="flex gap-3 justify-end pt-6 border-t border-border">
+            <div className="flex gap-2 justify-end pt-4">
               <button
                 type="button"
                 onClick={onClose}
                 className="
-                  px-6 py-3 rounded-lg font-semibold text-base
+                  px-4 py-2 rounded font-medium
                   bg-bg-secondary hover:bg-bg-primary text-text-primary
                   transition-colors
                 "
@@ -138,7 +135,7 @@ export function CreateGuildModal({
                 type="submit"
                 disabled={isLoading}
                 className="
-                  px-6 py-3 rounded-lg font-semibold text-base
+                  px-4 py-2 rounded font-medium
                   bg-accent hover:bg-accent-hover text-white
                   disabled:opacity-50 disabled:cursor-not-allowed
                   transition-colors

@@ -65,20 +65,19 @@ body {
 .auth-card {
   background-color: var(--bg-secondary);
   border-radius: 8px;
-  padding: 48px;
+  padding: 32px;
   width: 100%;
   max-width: 480px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
 }
 
 .auth-card h1 {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 700;
   color: var(--text-primary);
   text-align: center;
-  margin-bottom: 8px;
 }
 
 .auth-subtitle {
@@ -90,18 +89,18 @@ body {
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  margin-top: 12px;
+  gap: 16px;
+  margin-top: 8px;
 }
 
 .auth-field {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .auth-field label {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -111,9 +110,7 @@ body {
 .auth-submit {
   width: 100%;
   background-color: var(--accent);
-  margin-top: 16px;
-  padding: 12px 16px;
-  font-size: 16px;
+  margin-top: 8px;
 }
 
 .auth-submit:hover {

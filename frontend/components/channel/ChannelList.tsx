@@ -28,23 +28,23 @@ export function ChannelList({
 
   return (
     <>
-      <div className="w-80 bg-bg-secondary border-r border-border flex flex-col h-screen">
+      <div className="w-72 bg-bg-secondary border-r border-border flex flex-col h-screen">
         {/* Header */}
-        <div className="px-6 py-6 border-b border-border">
-          <h2 className="text-xl font-bold text-text-primary">
+        <div className="p-6 border-b border-border">
+          <h2 className="text-2xl font-bold text-text-primary">
             {guildName}
           </h2>
         </div>
 
         {/* Channels */}
-        <div className="flex-1 overflow-y-auto px-4 py-6 space-y-10">
+        <div className="flex-1 overflow-y-auto p-4 space-y-8">
           {/* Text Channels (Rooms) */}
           {roomsChannels.length > 0 && (
             <div>
-              <h3 className="text-sm font-bold text-text-muted uppercase px-4 mb-5 tracking-widest">
+              <h3 className="text-xs font-bold text-text-muted uppercase px-2 mb-4 tracking-widest">
                 🏠 Rooms
               </h3>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {roomsChannels.map((channel) => (
                   <ChannelItem
                     key={channel.id}
@@ -60,10 +60,10 @@ export function ChannelList({
           {/* Voice Channels (Calls) */}
           {callsChannels.length > 0 && (
             <div>
-              <h3 className="text-sm font-bold text-text-muted uppercase px-4 mb-5 tracking-widest">
+              <h3 className="text-xs font-bold text-text-muted uppercase px-2 mb-4 tracking-widest">
                 📞 Calls
               </h3>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {callsChannels.map((channel) => (
                   <ChannelItem
                     key={channel.id}
@@ -85,13 +85,13 @@ export function ChannelList({
         </div>
 
         {/* Create Channel Button */}
-        <div className="px-6 py-6 border-t border-border">
+        <div className="p-4 border-t border-border">
           <button
             onClick={() => setShowCreateModal(true)}
             className="
-              w-full px-6 py-3 rounded-lg font-semibold
-              bg-bg-hover hover:bg-accent/20 text-text-primary
-              transition-colors text-base
+              w-full px-4 py-3 rounded font-semibold
+              bg-bg-hover hover:bg-bg-primary text-text-primary
+              transition-colors text-sm
             "
           >
             + Add Channel

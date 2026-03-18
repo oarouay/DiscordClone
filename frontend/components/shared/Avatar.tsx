@@ -9,16 +9,7 @@ export function Avatar({ user, size = "md" }: { user: User; size?: "sm" | "md" |
     lg: "w-10 h-10 text-base",
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((word) => word[0])
-      .join("")
-      .substring(0, 2)
-      .toUpperCase();
-  };
-
-  const initials = getInitials(user.displayName || user.username);
+  const initials = user.username.substring(0, 2).toUpperCase();
 
   return (
     <div

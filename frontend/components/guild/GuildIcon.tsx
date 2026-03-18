@@ -9,16 +9,7 @@ export function GuildIcon({ guild, size = "md" }: { guild: Guild; size?: "sm" | 
     lg: "w-16 h-16 text-base",
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((word) => word[0])
-      .join("")
-      .substring(0, 2)
-      .toUpperCase();
-  };
-
-  const initials = getInitials(guild.name);
+  const initials = guild.name.substring(0, 2).toUpperCase();
 
   const typeIndicator = guild.guildType === "HOUSE" ? "🔒" : "🌍";
 

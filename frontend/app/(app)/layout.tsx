@@ -47,12 +47,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const handleSelectGuild = (guildId: string) => {
     setSelectedGuildId(guildId);
-    if (!guildId) {
-      // Navigate to DMs when guildId is empty
-      router.push("/channels/me");
-    } else {
-      router.push(`/guilds/${guildId}`);
-    }
+    router.push(`/guilds/${guildId}`);
   };
 
   if (isLoading || isLoadingGuilds) {
