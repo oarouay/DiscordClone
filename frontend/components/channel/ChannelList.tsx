@@ -22,79 +22,115 @@ export function ChannelList({
 }: ChannelListProps) {
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  // Group channels by category
   const roomsChannels = channels.filter((c) => c.category === "Rooms");
   const callsChannels = channels.filter((c) => c.category === "Calls");
 
   return (
     <>
-      <div className="w-80 bg-bg-secondary border-r border-border flex flex-col h-screen">
+      <div className="channel-sidebar">
         {/* Header */}
-        <div className="px-6 py-6 border-b border-border">
-          <h2 className="text-xl font-bold text-text-primary">
+        <div className="channel-sidebar-header">
+          <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {guildName}
-          </h2>
+          </span>
         </div>
 
-        {/* Channels */}
-        <div className="flex-1 overflow-y-auto px-4 py-6 space-y-10">
-          {/* Text Channels (Rooms) */}
+        {/* Channel groups */}
+        <ul className="channel-list">
           {roomsChannels.length > 0 && (
-            <div>
-              <h3 className="text-sm font-bold text-text-muted uppercase px-4 mb-5 tracking-widest">
+            <>
+              <li style={{
+                listStyle: "none",
+                padding: "14px 10px 5px",
+                fontSize: 10,
+                fontWeight: 600,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                color: "var(--text-muted)",
+                userSelect: "none",
+              }}>
                 🏠 Rooms
-              </h3>
-              <div className="space-y-2">
-                {roomsChannels.map((channel) => (
-                  <ChannelItem
-                    key={channel.id}
-                    channel={channel}
-                    isSelected={currentChannelId === channel.id}
-                    guildId={guildId}
-                  />
-                ))}
-              </div>
-            </div>
+              </li>
+              {roomsChannels.map((channel) => (
+                <ChannelItem
+                  key={channel.id}
+                  channel={channel}
+                  isSelected={currentChannelId === channel.id}
+                  guildId={guildId}
+                />
+              ))}
+            </>
           )}
 
-          {/* Voice Channels (Calls) */}
           {callsChannels.length > 0 && (
-            <div>
-              <h3 className="text-sm font-bold text-text-muted uppercase px-4 mb-5 tracking-widest">
+            <>
+              <li style={{
+                listStyle: "none",
+                padding: "14px 10px 5px",
+                fontSize: 10,
+                fontWeight: 600,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                color: "var(--text-muted)",
+                userSelect: "none",
+              }}>
                 📞 Calls
-              </h3>
-              <div className="space-y-2">
-                {callsChannels.map((channel) => (
-                  <ChannelItem
-                    key={channel.id}
-                    channel={channel}
-                    isSelected={currentChannelId === channel.id}
-                    guildId={guildId}
-                  />
-                ))}
-              </div>
-            </div>
+              </li>
+              {callsChannels.map((channel) => (
+                <ChannelItem
+                  key={channel.id}
+                  channel={channel}
+                  isSelected={currentChannelId === channel.id}
+                  guildId={guildId}
+                />
+              ))}
+            </>
           )}
 
-          {/* No channels message */}
           {channels.length === 0 && (
-            <p className="text-sm text-text-muted text-center py-12">
+            <li style={{
+              listStyle: "none",
+              textAlign: "center",
+              color: "var(--text-muted)",
+              fontSize: 13,
+              padding: "32px 8px",
+            }}>
               No channels yet
-            </p>
+            </li>
           )}
-        </div>
+        </ul>
 
-        {/* Create Channel Button */}
-        <div className="px-6 py-6 border-t border-border">
+        {/* Add channel button */}
+        <div style={{ padding: "0 8px 12px" }}>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="
-              w-full px-6 py-3 rounded-lg font-semibold
-              bg-bg-hover hover:bg-accent/20 text-text-primary
-              transition-colors text-base
-            "
+            style={{
+              width: "100%",
+              padding: "8px 12px",
+              background: "var(--bg-hover)",
+              border: "1px solid var(--border)",
+              borderRadius: "var(--radius)",
+              color: "var(--text-secondary)",
+              fontSize: 13,
+              fontWeight: 600,
+              fontFamily: "inherit",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              transition: "color 0.12s, border-color 0.12s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = "var(--accent)";
+              e.currentTarget.style.borderColor = "var(--accent)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = "var(--text-secondary)";
+              e.currentTarget.style.borderColor = "var(--border)";
+            }}
           >
-            + Add Channel
+            ＋ Add Channel
           </button>
         </div>
       </div>

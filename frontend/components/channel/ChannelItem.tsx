@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import type { Channel } from "@/types";
 
 type ChannelItemProps = {
@@ -10,24 +11,39 @@ type ChannelItemProps = {
 };
 
 export function ChannelItem({ channel, isSelected, guildId }: ChannelItemProps) {
+  const [hovered, setHovered] = useState(false);
   const icon = channel.type === "VOICE" ? "🎤" : "💬";
 
+  const bg = isSelected ? "var(--bg-hover)" : hovered ? "var(--bg-hover)" : "transparent";
+  const color = isSelected ? "var(--accent)" : hovered ? "var(--text-primary)" : undefined;
+
   return (
-    <Link
-      href={`/guilds/${guildId}/${channel.id}`}
-      className={`
-        block px-6 py-4 mx-2 rounded-lg font-medium text-base transition-colors
-        ${
-          isSelected
-            ? "bg-bg-hover text-accent"
-            : "text-text-secondary hover:bg-bg-hover hover:text-text-primary"
-        }
-      `}
-    >
-      <div className="flex items-center gap-3">
-        <span className="text-lg">{icon}</span>
-        <span className="truncate">{channel.name}</span>
-      </div>
-    </Link>
+    <li style={{ listStyle: "none" }}>
+      <Link
+        href={`/guilds/${guildId}/${channel.id}`}
+        className="channel-item"
+        style={{ background: bg, color }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
+        {isSelected && (
+          <span
+            style={{
+              position: "absolute",
+              left: 0,
+              top: "20%",
+              height: "60%",
+              width: 3,
+              background: "var(--accent)",
+              borderRadius: "0 3px 3px 0",
+            }}
+          />
+        )}
+        <span style={{ fontSize: 13, opacity: 0.65, flexShrink: 0 }}>{icon}</span>
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {channel.name}
+        </span>
+      </Link>
+    </li>
   );
 }

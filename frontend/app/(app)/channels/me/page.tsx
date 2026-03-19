@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useState, useEffect } from "react";
 import { mockDMConversations, mockDMMessages, mockUser } from "@/lib/mock";
 import { useWebSocket } from "@/hooks/useWebSocket";
@@ -15,20 +17,16 @@ export default function DirectMessagesPage() {
   const selectedUser = mockDMConversations.find((u) => u.id === selectedUserId);
   const dmChannelId = selectedUserId ? `dm_${selectedUserId}` : "";
 
-  // WebSocket hook for real-time messages
   const { isConnected, send } = useWebSocket({
     onMessage: (message: Message) => {
-      // Add incoming message to the current DM conversation
       if (message.channelId === dmChannelId) {
         setMessages((prev) => [...prev, message]);
       }
     },
   });
 
-  // Load initial messages for selected user
   useEffect(() => {
     if (!selectedUserId) return;
-
     // TODO: Replace with API call to GET /dms/:userId/messages
     const userMessages = mockDMMessages.filter((m) => m.channelId === dmChannelId);
     setMessages(userMessages);
@@ -37,11 +35,9 @@ export default function DirectMessagesPage() {
   const handleSendMessage = (content: string) => {
     if (!selectedUserId || !dmChannelId) return;
 
-    // Try to send via WebSocket
     const sent = send(dmChannelId, content);
 
     if (!sent) {
-      // Fallback: create local message if WebSocket not connected
       // TODO: Replace with API call to POST /dms/:userId/messages
       const newMessage: Message = {
         id: String(Date.now()),
@@ -55,16 +51,71 @@ export default function DirectMessagesPage() {
     }
   };
 
+  const handleEditMessage = (messageId: string, newContent: string) => {
+    // TODO: Replace with API call to PATCH /messages/:messageId
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === messageId
+          ? { ...m, content: newContent, editedAt: new Date().toISOString() }
+          : m
+      )
+    );
+  };
+
+  const handleDeleteMessage = (messageId: string) => {
+    // TODO: Replace with API call to DELETE /messages/:messageId
+    setMessages((prev) => prev.filter((m) => m.id !== messageId));
+  };
+
+  const statusColor = (status: string) =>
+    status === "online" ? "var(--success)" : "var(--warning)";
+  const statusLabel = (status: string) =>
+    status === "online" ? "● Online" : "◐ Idle";
+
   return (
-    <div className="flex-1 flex">
+    <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
       {/* DM List Sidebar */}
-      <div className="w-80 bg-bg-secondary border-r border-border flex flex-col">
-        <div className="h-20 border-b border-border px-6 flex items-center justify-between">
-          <h2 className="font-semibold text-text-primary text-lg">Direct Messages</h2>
-          {isConnected && <span className="text-xs text-green-500">● Online</span>}
+      <div
+        style={{
+          width: 240,
+          minWidth: 240,
+          background: "var(--bg-secondary)",
+          borderRight: "1px solid var(--border)",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <div
+          style={{
+            height: 52,
+            minHeight: 52,
+            borderBottom: "1px solid var(--border)",
+            padding: "0 16px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexShrink: 0,
+          }}
+        >
+          <h2
+            style={{
+              fontFamily: "var(--font-display, 'Rajdhani', sans-serif)",
+              fontSize: 16,
+              fontWeight: 700,
+              color: "var(--text-primary)",
+              letterSpacing: "0.3px",
+            }}
+          >
+            Direct Messages
+          </h2>
+          {isConnected && (
+            <span style={{ fontSize: 11, color: "var(--success)", fontWeight: 500 }}>
+              ● Live
+            </span>
+          )}
         </div>
-        <DMList 
-          conversations={mockDMConversations} 
+        <DMList
+          conversations={mockDMConversations}
           selectedUserId={selectedUserId}
           onSelectUser={setSelectedUserId}
         />
@@ -72,31 +123,70 @@ export default function DirectMessagesPage() {
 
       {/* DM Chat Area */}
       {selectedUser ? (
-        <div className="flex-1 flex flex-col">
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
           {/* Header */}
-<div className="h-20 border-b border-bg-secondary px-6 flex items-center gap-4 bg-bg-primary">
-          <span className="text-3xl">💬</span>
-          <div className="flex-1">
-            <h2 className="font-semibold text-text-primary text-base">{selectedUser.displayName}</h2>
-              <p className="text-sm text-text-muted">@{selectedUser.username}</p>
+          <div
+            style={{
+              height: 52,
+              minHeight: 52,
+              borderBottom: "1px solid var(--border)",
+              padding: "0 20px",
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              background: "var(--bg-primary)",
+              flexShrink: 0,
+            }}
+          >
+            <span style={{ fontSize: 18 }}>💬</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div
+                style={{
+                  fontFamily: "var(--font-display, 'Rajdhani', sans-serif)",
+                  fontSize: 16,
+                  fontWeight: 700,
+                  color: "var(--text-primary)",
+                  letterSpacing: "0.3px",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {selectedUser.displayName}
+              </div>
+              <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                @{selectedUser.username}
+              </div>
             </div>
-            <span className={`text-xs ${selectedUser.status === "online" ? "text-green-500" : "text-yellow-500"}`}>
-              {selectedUser.status === "online" ? "● Online" : "◐ Idle"}
+            <span style={{ fontSize: 11, fontWeight: 500, color: statusColor(selectedUser.status), flexShrink: 0 }}>
+              {statusLabel(selectedUser.status)}
             </span>
           </div>
 
-          {/* Messages */}
-          <MessageList messages={messages} />
-
-          {/* Input Area */}
-          <MessageInput
-            channelName={selectedUser.displayName}
-            onSend={handleSendMessage}
+          <MessageList
+            messages={messages}
+            currentUserId={mockUser.id}
+            onEdit={handleEditMessage}
+            onDelete={handleDeleteMessage}
           />
+          <MessageInput channelName={selectedUser.displayName} onSend={handleSendMessage} />
         </div>
       ) : (
-        <div className="flex-1 flex items-center justify-center bg-bg-primary">
-          <p className="text-text-muted text-lg">Select a conversation to start messaging</p>
+        <div className="empty-state">
+          <div style={{ fontSize: 52, opacity: 0.2 }}>💬</div>
+          <span
+            style={{
+              fontFamily: "var(--font-display, 'Rajdhani', sans-serif)",
+              fontSize: 20,
+              fontWeight: 700,
+              color: "var(--text-secondary)",
+            }}
+          >
+            No conversation selected
+          </span>
+          <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
+            Pick someone from the list to start chatting.
+          </span>
         </div>
       )}
     </div>

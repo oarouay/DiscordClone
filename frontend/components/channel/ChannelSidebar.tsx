@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { mockGuilds } from "@/lib/mock";
 import { ChannelList } from "./ChannelList";
 import type { Channel } from "@/types";
 
 export function ChannelSidebar() {
+  usePathname(); // triggers re-render on route change
   const params = useParams();
   const guildId = params?.guildId as string | undefined;
   const channelId = params?.channelId as string | undefined;
@@ -30,7 +30,7 @@ export function ChannelSidebar() {
   };
 
   if (!guild) {
-    return <aside className="channel-sidebar" />;
+    return null;
   }
 
   return (

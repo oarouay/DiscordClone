@@ -3,47 +3,65 @@
 import type { Guild } from "@/types";
 
 export function GuildIcon({ guild, size = "md" }: { guild: Guild; size?: "sm" | "md" | "lg" }) {
-  const sizeClasses = {
-    sm: "w-8 h-8 text-xs",
-    md: "w-12 h-12 text-sm",
-    lg: "w-16 h-16 text-base",
+  const sizeMap = {
+    sm: { dim: 32, font: 12 },
+    md: { dim: 44, font: 15 },
+    lg: { dim: 56, font: 18 },
   };
+  const { dim, font } = sizeMap[size];
 
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((word) => word[0])
-      .join("")
-      .substring(0, 2)
-      .toUpperCase();
-  };
-
-  const initials = getInitials(guild.name);
+  const getInitials = (name: string) =>
+    name.split(" ").map((w) => w[0]).join("").substring(0, 2).toUpperCase();
 
   const typeIndicator = guild.guildType === "HOUSE" ? "🔒" : "🌍";
 
   return (
-    <div className="relative">
+    <div style={{ position: "relative", width: dim, height: dim, flexShrink: 0 }}>
       <div
-        className={`
-          ${sizeClasses[size]}
-          bg-gradient-to-br from-indigo-500 to-purple-600
-          rounded-full flex items-center justify-center
-          text-white font-bold
-        `}
+        style={{
+          width: dim,
+          height: dim,
+          borderRadius: "50%",
+          background: "linear-gradient(135deg, #6c6fff 0%, #a78bfa 100%)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "#fff",
+          fontFamily: "var(--font-display, 'Rajdhani', sans-serif)",
+          fontWeight: 700,
+          fontSize: font,
+          letterSpacing: "0.5px",
+          overflow: "hidden",
+        }}
       >
         {guild.iconUrl ? (
           <img
             src={guild.iconUrl}
             alt={guild.name}
-            className="w-full h-full rounded-full object-cover"
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />
         ) : (
-          initials
+          getInitials(guild.name)
         )}
       </div>
+
       {size !== "sm" && (
-        <div className="absolute bottom-0 right-0 text-lg bg-bg-primary rounded-full p-0.5">
+        <div
+          style={{
+            position: "absolute",
+            bottom: -1,
+            right: -1,
+            width: 16,
+            height: 16,
+            borderRadius: "50%",
+            background: "var(--bg-tertiary)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 9,
+            lineHeight: 1,
+          }}
+        >
           {typeIndicator}
         </div>
       )}

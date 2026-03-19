@@ -10,18 +10,34 @@ export const mockUser: User = {
 
 const mockUser2: User = {
   id: "2",
-  username: "alice",
-  displayName: "Alice",
-  email: "alice@example.com",
+  username: "adem",
+  displayName: "Adem",
+  email: "adem@example.com",
   status: "online",
 };
 
 const mockUser3: User = {
   id: "3",
-  username: "bob",
-  displayName: "Bob",
-  email: "bob@example.com",
+  username: "ahmed",
+  displayName: "Ahmed",
+  email: "ahmed@example.com",
+  status: "offline",
+};
+
+const mockUser4: User = {
+  id: "4",
+  username: "oussema",
+  displayName: "Oussema",
+  email: "oussema@example.com",
   status: "idle",
+};
+
+const mockUser5: User = {
+  id: "5",
+  username: "amine",
+  displayName: "Amine",
+  email: "amine@example.com",
+  status: "online",
 };
 
 export const mockChannels: Channel[] = [
@@ -43,7 +59,7 @@ export const mockMessages: Message[] = [
     id: "msg2",
     channelId: "101",
     author: mockUser3,
-    content: "Thanks for the invite Alice! Looking forward to chatting here.",
+    content: "Thanks for the invite! Looking forward to chatting here.",
     createdAt: new Date(Date.now() - 3000000).toISOString(),
   },
   {
@@ -56,14 +72,14 @@ export const mockMessages: Message[] = [
   {
     id: "msg4",
     channelId: "101",
-    author: mockUser2,
+    author: mockUser4,
     content: "This is awesome! What's everyone's favorite game?",
     createdAt: new Date(Date.now() - 1800000).toISOString(),
   },
   {
     id: "msg5",
     channelId: "101",
-    author: mockUser3,
+    author: mockUser5,
     content: "I've been playing Elden Ring recently, pretty fun!",
     createdAt: new Date(Date.now() - 1200000).toISOString(),
   },
@@ -76,6 +92,44 @@ export const mockMessages: Message[] = [
   },
 ];
 
+export const mockMembers = [
+  {
+    userId: "1",
+    guildId: "1",
+    user: mockUser,
+    roles: [{ id: "role1", guildId: "1", name: "Owner", permissions: 0, color: "#5865f2" }],
+    joinedAt: new Date(Date.now() - 30 * 24 * 3600000).toISOString(),
+  },
+  {
+    userId: "2",
+    guildId: "1",
+    user: mockUser2,
+    roles: [{ id: "role2", guildId: "1", name: "Moderator", permissions: 0, color: "#23a55a" }],
+    joinedAt: new Date(Date.now() - 20 * 24 * 3600000).toISOString(),
+  },
+  {
+    userId: "3",
+    guildId: "1",
+    user: mockUser3,
+    roles: [],
+    joinedAt: new Date(Date.now() - 15 * 24 * 3600000).toISOString(),
+  },
+  {
+    userId: "4",
+    guildId: "1",
+    user: mockUser4,
+    roles: [],
+    joinedAt: new Date(Date.now() - 10 * 24 * 3600000).toISOString(),
+  },
+  {
+    userId: "5",
+    guildId: "1",
+    user: mockUser5,
+    roles: [],
+    joinedAt: new Date(Date.now() - 5 * 24 * 3600000).toISOString(),
+  },
+];
+
 export const mockGuilds: Guild[] = [
   {
     id: "1",
@@ -84,16 +138,15 @@ export const mockGuilds: Guild[] = [
     guildType: "HOUSE",
     isPrivate: true,
     channels: mockChannels,
-    members: [],
+    members: mockMembers,
   },
 ];
 
 // DM Conversations - list of users
-export const mockDMConversations: User[] = [mockUser2, mockUser3];
+export const mockDMConversations: User[] = [mockUser2, mockUser3, mockUser4, mockUser5];
 
 // DM Messages
 export const mockDMMessages: Message[] = [
-  // Messages with Alice (user 2)
   {
     id: "dm1",
     channelId: "dm_2",
@@ -122,7 +175,6 @@ export const mockDMMessages: Message[] = [
     content: "Sure, sounds good!",
     createdAt: new Date(Date.now() - 6300000).toISOString(),
   },
-  // Messages with Bob (user 3)
   {
     id: "dm5",
     channelId: "dm_3",
@@ -143,5 +195,33 @@ export const mockDMMessages: Message[] = [
     author: mockUser3,
     content: "Cool, let me know when you're done. We can coop the next one!",
     createdAt: new Date(Date.now() - 3000000).toISOString(),
+  },
+  {
+    id: "dm8",
+    channelId: "dm_4",
+    author: mockUser4,
+    content: "Bro are you free tonight?",
+    createdAt: new Date(Date.now() - 1800000).toISOString(),
+  },
+  {
+    id: "dm9",
+    channelId: "dm_4",
+    author: mockUser,
+    content: "Yeah what's up?",
+    createdAt: new Date(Date.now() - 1500000).toISOString(),
+  },
+  {
+    id: "dm10",
+    channelId: "dm_5",
+    author: mockUser5,
+    content: "Check out this clip 🔥",
+    createdAt: new Date(Date.now() - 900000).toISOString(),
+  },
+  {
+    id: "dm11",
+    channelId: "dm_5",
+    author: mockUser,
+    content: "Insane bro 😭",
+    createdAt: new Date(Date.now() - 600000).toISOString(),
   },
 ];
