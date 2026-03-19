@@ -1,5 +1,4 @@
-import type { User, Guild, Channel, Member, Message } from "@/types";
-
+import type { User, Guild, Channel, Member, Message, Invite } from "@/types";
 export const mockUser: User = {
   id: "1",
   username: "devuser",
@@ -225,3 +224,10 @@ export const mockDMMessages: Message[] = [
     createdAt: new Date(Date.now() - 600000).toISOString(),
   },
 ];
+
+export const mockInvite: Invite = {
+  code: "abc123",
+  guildId: "1",
+  createdBy: "1",
+  expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+};

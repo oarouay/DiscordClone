@@ -1,15 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import { useParams, usePathname } from "next/navigation";
 import { mockGuilds } from "@/lib/mock";
 import { ChannelList } from "./ChannelList";
+import { InviteModal } from "@/components/guild/InviteModal";
 import type { Channel } from "@/types";
 
 export function ChannelSidebar() {
-  usePathname(); // triggers re-render on route change
+  usePathname();
   const params = useParams();
   const guildId = params?.guildId as string | undefined;
   const channelId = params?.channelId as string | undefined;
+  const [showInvite, setShowInvite] = useState(false);
 
   const guild = mockGuilds.find((g) => g.id === guildId);
 
@@ -29,17 +32,25 @@ export function ChannelSidebar() {
     }
   };
 
-  if (!guild) {
-    return null;
-  }
+  if (!guild) return null;
 
   return (
-    <ChannelList
-      channels={guild.channels}
-      guildId={guild.id}
-      guildName={guild.name}
-      currentChannelId={channelId}
-      onCreateChannel={handleCreateChannel}
-    />
+    <>
+      <ChannelList
+        channels={guild.channels}
+        guildId={guild.id}
+        guildName={guild.name}
+        currentChannelId={channelId}
+        onCreateChannel={handleCreateChannel}
+        onInvite={() => setShowInvite(true)}
+      />
+      {showInvite && (
+        <InviteModal
+          guildId={guild.id}
+          guildName={guild.name}
+          onClose={() => setShowInvite(false)}
+        />
+      )}
+    </>
   );
 }

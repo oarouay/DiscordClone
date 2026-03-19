@@ -11,6 +11,7 @@ type ChannelListProps = {
   guildName: string;
   currentChannelId?: string;
   onCreateChannel: (name: string, type: "TEXT" | "VOICE", category: string) => Promise<void>;
+  onInvite: () => void;
 };
 
 export function ChannelList({
@@ -19,6 +20,7 @@ export function ChannelList({
   guildName,
   currentChannelId,
   onCreateChannel,
+  onInvite,
 }: ChannelListProps) {
   const [showCreateModal, setShowCreateModal] = useState(false);
 
@@ -28,14 +30,12 @@ export function ChannelList({
   return (
     <>
       <div className="channel-sidebar">
-        {/* Header */}
         <div className="channel-sidebar-header">
           <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {guildName}
           </span>
         </div>
 
-        {/* Channel groups */}
         <ul className="channel-list">
           {roomsChannels.length > 0 && (
             <>
@@ -100,8 +100,38 @@ export function ChannelList({
           )}
         </ul>
 
-        {/* Add channel button */}
-        <div style={{ padding: "0 8px 12px" }}>
+        <div style={{ padding: "0 8px 12px", display: "flex", flexDirection: "column", gap: 6 }}>
+          <button
+            onClick={onInvite}
+            style={{
+              width: "100%",
+              padding: "8px 12px",
+              background: "var(--bg-hover)",
+              border: "1px solid var(--border)",
+              borderRadius: "var(--radius)",
+              color: "var(--text-secondary)",
+              fontSize: 13,
+              fontWeight: 600,
+              fontFamily: "inherit",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              transition: "color 0.12s, border-color 0.12s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = "var(--success)";
+              e.currentTarget.style.borderColor = "var(--success)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = "var(--text-secondary)";
+              e.currentTarget.style.borderColor = "var(--border)";
+            }}
+          >
+            ＋ Invite People
+          </button>
+
           <button
             onClick={() => setShowCreateModal(true)}
             style={{
