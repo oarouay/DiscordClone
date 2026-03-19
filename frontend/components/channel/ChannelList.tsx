@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { Channel } from "@/types";
 import { ChannelItem } from "./ChannelItem";
 import { CreateChannelModal } from "./CreateChannelModal";
+import { useRouter } from "next/navigation";
 
 type ChannelListProps = {
   channels: Channel[];
@@ -26,6 +27,7 @@ export function ChannelList({
 
   const roomsChannels = channels.filter((c) => c.category === "Rooms");
   const callsChannels = channels.filter((c) => c.category === "Calls");
+  const router = useRouter();
 
   return (
     <>
@@ -130,6 +132,37 @@ export function ChannelList({
             }}
           >
             ＋ Invite People
+          </button>
+
+          <button
+            onClick={() => router.push(`/guilds/${guildId}/settings`)}
+            style={{
+              width: "100%",
+              padding: "8px 12px",
+              background: "var(--bg-hover)",
+              border: "1px solid var(--border)",
+              borderRadius: "var(--radius)",
+              color: "var(--text-secondary)",
+              fontSize: 13,
+              fontWeight: 600,
+              fontFamily: "inherit",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              transition: "color 0.12s, border-color 0.12s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = "var(--text-primary)";
+              e.currentTarget.style.borderColor = "var(--text-primary)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = "var(--text-secondary)";
+              e.currentTarget.style.borderColor = "var(--border)";
+            }}
+          >
+            ⚙ Server Settings
           </button>
 
           <button

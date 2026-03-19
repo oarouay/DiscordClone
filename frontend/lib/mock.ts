@@ -1,4 +1,5 @@
-import type { User, Guild, Channel, Member, Message, Invite } from "@/types";
+import type { User, Guild, Channel, Message, Invite, Role, Member } from "@/types";
+
 export const mockUser: User = {
   id: "1",
   username: "devuser",
@@ -40,10 +41,55 @@ const mockUser5: User = {
 };
 
 export const mockChannels: Channel[] = [
-  { id: "101", guildId: "1", name: "general", type: "TEXT", category: "Rooms", subType: "DEFAULT", position: 0 },
-  { id: "102", guildId: "1", name: "announcements", type: "TEXT", category: "Rooms", subType: "ANNOUNCEMENTS", position: 1 },
-  { id: "103", guildId: "1", name: "general", type: "VOICE", category: "Calls", position: 2 },
-  { id: "104", guildId: "1", name: "gaming", type: "VOICE", category: "Calls", position: 3 },
+  { id: "101", guildId: "1", name: "general",       type: "TEXT",  category: "Rooms", subType: "DEFAULT",       position: 0 },
+  { id: "102", guildId: "1", name: "announcements", type: "TEXT",  category: "Rooms", subType: "ANNOUNCEMENTS", position: 1 },
+  { id: "103", guildId: "1", name: "general",       type: "VOICE", category: "Calls",                           position: 2 },
+  { id: "104", guildId: "1", name: "gaming",        type: "VOICE", category: "Calls",                           position: 3 },
+];
+
+export const mockRoles: Role[] = [
+  { id: "role-1", guildId: "1", name: "Admin",     permissions: 255, color: "#e74c3c" },
+  { id: "role-2", guildId: "1", name: "Member",    permissions: 65,  color: "#3498db" },
+  { id: "role-3", guildId: "1", name: "Owner",     permissions: 255, color: "#5865f2" },
+  { id: "role-4", guildId: "1", name: "Moderator", permissions: 134, color: "#23a55a" },
+];
+
+export const mockMembers: Member[] = [
+  {
+    userId: "1",
+    guildId: "1",
+    user: mockUser,
+    roles: [mockRoles[2]],
+    joinedAt: new Date(Date.now() - 30 * 24 * 3600000).toISOString(),
+  },
+  {
+    userId: "2",
+    guildId: "1",
+    user: mockUser2,
+    roles: [mockRoles[3]],
+    joinedAt: new Date(Date.now() - 20 * 24 * 3600000).toISOString(),
+  },
+  {
+    userId: "3",
+    guildId: "1",
+    user: mockUser3,
+    roles: [mockRoles[1]],
+    joinedAt: new Date(Date.now() - 15 * 24 * 3600000).toISOString(),
+  },
+  {
+    userId: "4",
+    guildId: "1",
+    user: mockUser4,
+    roles: [mockRoles[1]],
+    joinedAt: new Date(Date.now() - 10 * 24 * 3600000).toISOString(),
+  },
+  {
+    userId: "5",
+    guildId: "1",
+    user: mockUser5,
+    roles: [mockRoles[1]],
+    joinedAt: new Date(Date.now() - 5 * 24 * 3600000).toISOString(),
+  },
 ];
 
 export const mockMessages: Message[] = [
@@ -91,44 +137,6 @@ export const mockMessages: Message[] = [
   },
 ];
 
-export const mockMembers = [
-  {
-    userId: "1",
-    guildId: "1",
-    user: mockUser,
-    roles: [{ id: "role1", guildId: "1", name: "Owner", permissions: 0, color: "#5865f2" }],
-    joinedAt: new Date(Date.now() - 30 * 24 * 3600000).toISOString(),
-  },
-  {
-    userId: "2",
-    guildId: "1",
-    user: mockUser2,
-    roles: [{ id: "role2", guildId: "1", name: "Moderator", permissions: 0, color: "#23a55a" }],
-    joinedAt: new Date(Date.now() - 20 * 24 * 3600000).toISOString(),
-  },
-  {
-    userId: "3",
-    guildId: "1",
-    user: mockUser3,
-    roles: [],
-    joinedAt: new Date(Date.now() - 15 * 24 * 3600000).toISOString(),
-  },
-  {
-    userId: "4",
-    guildId: "1",
-    user: mockUser4,
-    roles: [],
-    joinedAt: new Date(Date.now() - 10 * 24 * 3600000).toISOString(),
-  },
-  {
-    userId: "5",
-    guildId: "1",
-    user: mockUser5,
-    roles: [],
-    joinedAt: new Date(Date.now() - 5 * 24 * 3600000).toISOString(),
-  },
-];
-
 export const mockGuilds: Guild[] = [
   {
     id: "1",
@@ -141,10 +149,8 @@ export const mockGuilds: Guild[] = [
   },
 ];
 
-// DM Conversations - list of users
 export const mockDMConversations: User[] = [mockUser2, mockUser3, mockUser4, mockUser5];
 
-// DM Messages
 export const mockDMMessages: Message[] = [
   {
     id: "dm1",
