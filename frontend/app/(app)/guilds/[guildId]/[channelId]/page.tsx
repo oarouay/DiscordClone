@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { mockGuilds, mockMessages, mockUser } from "@/lib/mock";
 import { useWebSocket } from "@/hooks/useWebSocket";
+import { VoiceChannel } from "@/components/voice/VoiceChannel";
 import MessageList from "@/components/chat/MessageList";
 import MessageInput from "@/components/chat/MessageInput";
 import { MemberList } from "@/components/guild/MemberList";
@@ -81,7 +82,19 @@ export default function ChannelPage() {
     );
   }
 
-  const channelIcon = channel.type === "VOICE" ? "🎤" : "💬";
+  if (channel.type === "VOICE") {
+    return (
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <VoiceChannel
+          channelId={channelId}
+          channelName={channel.name}
+          currentUser={mockUser}
+        />
+      </div>
+    );
+  }
+
+  const channelIcon = "💬";
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -104,7 +117,7 @@ export default function ChannelPage() {
             #{channel.name}
           </div>
           <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
-            {channel.type === "VOICE" ? "Voice Channel" : channel.subType || "Text Channel"}
+            {channel.subType || "Text Channel"}
           </div>
         </div>
         {isConnected && (
@@ -131,13 +144,13 @@ export default function ChannelPage() {
           />
           <MessageInput
             channelName={channel.name}
-            isDisabled={channel.type === "VOICE"}
+            isDisabled={false}
             onSend={handleSendMessage}
           />
         </div>
 
         {/* Member list */}
-        {channel.type === "TEXT" && guild && <MemberList members={guild.members} />}
+        {guild && <MemberList members={guild.members} />}
       </div>
     </div>
   );
