@@ -4,6 +4,7 @@ export type User = {
   displayName: string;
   email: string;
   status: "online" | "idle" | "offline";
+  avatarUrl?: string;
 };
 
 export type Guild = {

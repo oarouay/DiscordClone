@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
+import { Mic } from "lucide-react";
 import { useWebRTC } from "@/hooks/useWebRTC";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { VoiceControls } from "./VoiceControls";
@@ -44,18 +45,18 @@ export function VoiceChannel({ channelId, channelName, currentUser }: Props) {
   return (
     <div className="voice-channel">
       <div className="voice-channel-header">
-        <span className="voice-channel-icon">🎤</span>
+        <Mic size={18} className="voice-channel-icon" />
         <div className="voice-channel-title">
           <span className="voice-channel-name">{channelName}</span>
           <span className="voice-channel-subtitle">Voice Channel</span>
         </div>
-        {isJoined && <span className="voice-live-badge">● Live</span>}
+        {isJoined && <span className="voice-live-badge"><span style={{color: "var(--success)"}}>●</span> Live</span>}
       </div>
 
       <div className="voice-channel-body">
         {!isJoined ? (
           <div className="voice-join-prompt">
-            <div className="voice-join-icon">🎤</div>
+            <Mic size={48} className="voice-join-icon" />
             <p className="voice-join-title">Voice Channel</p>
             <p className="voice-join-subtitle">
               Click join to connect your microphone and talk with others.

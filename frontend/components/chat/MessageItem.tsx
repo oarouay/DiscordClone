@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { Edit2, Trash2, Check, X } from "lucide-react";
 import type { Message } from "@/types";
 import { Avatar } from "@/components/shared/Avatar";
 
@@ -61,39 +62,29 @@ export default function MessageItem({ message, currentUserId, onEdit, onDelete }
     if (e.key === "Escape") cancelEdit();
   };
 
-  const btnStyle = (color: string): React.CSSProperties => ({
-    background: "transparent",
-    border: "none",
-    cursor: "pointer",
-    color,
-    fontSize: 12,
-    fontWeight: 600,
-    fontFamily: "inherit",
-    padding: "3px 8px",
-    borderRadius: "var(--radius-sm)",
-    transition: "background 0.1s",
-  });
-
   return (
     <div
+      className="msg-item-container"
       style={{
+        backgroundColor: hovered ? "rgba(255,255,255,0.025)" : undefined,
         display: "flex",
-        gap: 14,
-        padding: "6px 20px",
-        background: hovered ? "rgba(255,255,255,0.025)" : "transparent",
-        transition: "background 0.1s",
+        alignItems: "flex-start",
+        gap: 12,
+        padding: "12px 16px",
         position: "relative",
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      role="article"
+      aria-label={`Message from ${message.author.displayName} at ${timeAgo}`}
     >
       {/* Avatar */}
-      <div style={{ paddingTop: 2, flexShrink: 0 }}>
+      <div style={{ paddingTop: 2, flexShrink: 0, display: "flex" }}>
         <Avatar user={message.author} size="lg" />
       </div>
 
       {/* Body */}
-      <div style={{ flex: 1, minWidth: 0, paddingTop: 2 }}>
+      <div style={{ flex: 1, minWidth: 0, paddingTop: 2, display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 3 }}>
           <span style={{ fontSize: 15, fontWeight: 600, color: "var(--text-primary)", lineHeight: 1 }}>
             {message.author.displayName}
@@ -115,27 +106,31 @@ export default function MessageItem({ message, currentUserId, onEdit, onDelete }
                 e.target.style.height = e.target.scrollHeight + "px";
               }}
               onKeyDown={handleEditKeyDown}
-              style={{
-                width: "100%",
-                background: "var(--bg-floating)",
-                border: "1px solid var(--accent)",
-                borderRadius: "var(--radius)",
-                color: "var(--text-primary)",
-                fontFamily: "inherit",
-                fontSize: 15,
-                lineHeight: 1.55,
-                padding: "8px 12px",
-                resize: "none",
-                outline: "none",
-                overflow: "hidden",
-              }}
+              aria-label="Edit message"
+              className="msg-edit-textarea"
             />
             <div style={{ display: "flex", gap: 6, marginTop: 5, alignItems: "center" }}>
               <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
                 esc to cancel · enter to save
               </span>
-              <button style={btnStyle("var(--text-muted)")} onClick={cancelEdit}>Cancel</button>
-              <button style={{ ...btnStyle("var(--accent)"), background: "var(--accent-glow, rgba(108,111,255,0.15))" }} onClick={submitEdit}>Save</button>
+              <button 
+                className="msg-action-btn"
+                onClick={cancelEdit} 
+                aria-label="Cancel edit"
+                style={{ color: "var(--text-muted)", display: "flex", alignItems: "center", justifyContent: "center", padding: "4px", border: "none", background: "transparent", cursor: "pointer" }}
+                title="Cancel (Esc)"
+              >
+                <X size={16} />
+              </button>
+              <button 
+                className="msg-action-btn"
+                onClick={submitEdit} 
+                aria-label="Save edit"
+                style={{ color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", padding: "4px", border: "none", background: "transparent", cursor: "pointer" }}
+                title="Save (Enter)"
+              >
+                <Check size={16} />
+              </button>
             </div>
           </div>
         ) : (
@@ -154,33 +149,42 @@ export default function MessageItem({ message, currentUserId, onEdit, onDelete }
       {/* Action buttons — only for own messages, only on hover */}
       {isOwn && hovered && !editing && (
         <div
+          className="msg-actions"
           style={{
-            position: "absolute",
-            top: 4,
-            right: 20,
-            display: "flex",
-            gap: 4,
             background: "var(--bg-floating)",
             border: "1px solid var(--border)",
             borderRadius: "var(--radius)",
-            padding: "3px 4px",
+            padding: "4px",
+            display: "flex",
+            gap: 4,
+            flexShrink: 0,
+            marginLeft: "auto",
+            alignSelf: "center",
           }}
+          role="toolbar"
+          aria-label="Message actions"
         >
           <button
-            style={btnStyle("var(--text-secondary)")}
+            className="msg-action-btn"
+            onClick={() => { setEditValue(message.content); setEditing(true); }}
+            aria-label="Edit message"
             onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-hover)"; e.currentTarget.style.color = "var(--text-primary)"; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--text-secondary)"; }}
-            onClick={() => { setEditValue(message.content); setEditing(true); }}
+            style={{ color: "var(--text-secondary)", display: "flex", alignItems: "center", justifyContent: "center", padding: "4px", border: "none", background: "transparent", cursor: "pointer" }}
+            title="Edit message"
           >
-            ✏️ Edit
+            <Edit2 size={16} />
           </button>
           <button
-            style={btnStyle("var(--text-secondary)")}
+            className="msg-action-btn"
+            onClick={() => onDelete?.(message.id)}
+            aria-label="Delete message"
             onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,92,92,0.12)"; e.currentTarget.style.color = "var(--danger)"; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--text-secondary)"; }}
-            onClick={() => onDelete?.(message.id)}
+            style={{ color: "var(--text-secondary)", display: "flex", alignItems: "center", justifyContent: "center", padding: "4px", border: "none", background: "transparent", cursor: "pointer" }}
+            title="Delete message"
           >
-            🗑️ Delete
+            <Trash2 size={16} />
           </button>
         </div>
       )}

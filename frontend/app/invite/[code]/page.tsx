@@ -67,7 +67,6 @@ export default function InvitePage() {
     return (
       <div className="auth-shell">
         <div className="invite-loading">
-          <div className="invite-loading-icon">💬</div>
           <p className="invite-loading-text">Loading invite…</p>
         </div>
       </div>
@@ -78,7 +77,6 @@ export default function InvitePage() {
     return (
       <div className="auth-shell">
         <div className="invite-card">
-          <div className="invite-error-icon">⚠️</div>
           <h1 className="invite-card-title">Invalid Invite</h1>
           <p className="invite-card-subtitle">{error}</p>
           <button className="invite-action-btn" onClick={() => router.replace("/channels/me")}>

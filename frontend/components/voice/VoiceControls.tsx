@@ -1,5 +1,7 @@
 "use client";
 
+import { Mic, MicOff, Headphones, PhoneOff } from "lucide-react";
+
 type Props = {
   isMuted: boolean;
   isDeafened: boolean;
@@ -17,28 +19,16 @@ export function VoiceControls({
 }: Props) {
   return (
     <div className="voice-controls">
-      <button
-        className={`voice-ctrl-btn ${isMuted ? "voice-ctrl-btn-active" : ""}`}
-        onClick={onToggleMute}
-        title={isMuted ? "Unmute" : "Mute"}
-      >
-        {isMuted ? "🔇" : "🎙️"}
+      <button className={`voice-ctrl-btn ${isMuted ? "voice-ctrl-btn-active" : ""}`} onClick={onToggleMute} title={isMuted ? "Unmute" : "Mute"}>
+        {isMuted ? <MicOff size={15} /> : <Mic size={15} />}
       </button>
 
-      <button
-        className={`voice-ctrl-btn ${isDeafened ? "voice-ctrl-btn-active" : ""}`}
-        onClick={onToggleDeafen}
-        title={isDeafened ? "Undeafen" : "Deafen"}
-      >
-        {isDeafened ? "🔕" : "🔊"}
+      <button className={`voice-ctrl-btn ${isDeafened ? "voice-ctrl-btn-active" : ""}`} onClick={onToggleDeafen} title={isDeafened ? "Undeafen" : "Deafen"}>
+        <Headphones size={15} />
       </button>
 
-      <button
-        className="voice-ctrl-btn voice-ctrl-btn-leave"
-        onClick={onLeave}
-        title="Leave voice channel"
-      >
-        ✕ Leave
+      <button className="voice-ctrl-btn voice-ctrl-btn-leave" onClick={onLeave} title="Leave voice channel">
+        <PhoneOff size={15} /> 
       </button>
     </div>
   );

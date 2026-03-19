@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Globe, Settings } from "lucide-react";
 import type { Channel } from "@/types";
 import { ChannelItem } from "./ChannelItem";
 import { CreateChannelModal } from "./CreateChannelModal";
@@ -10,21 +11,16 @@ type ChannelListProps = {
   channels: Channel[];
   guildId: string;
   guildName: string;
+  isPublic: boolean;
   currentChannelId?: string;
   onCreateChannel: (name: string, type: "TEXT" | "VOICE", category: string) => Promise<void>;
   onInvite: () => void;
+  onJoinVoice?: (channelName: string, guildName: string) => void;
+  bottomSlot?: React.ReactNode;
 };
 
-export function ChannelList({
-  channels,
-  guildId,
-  guildName,
-  currentChannelId,
-  onCreateChannel,
-  onInvite,
-}: ChannelListProps) {
+export function ChannelList({ channels, guildId, guildName, isPublic, currentChannelId, onCreateChannel, onInvite, onJoinVoice, bottomSlot }: ChannelListProps) {
   const [showCreateModal, setShowCreateModal] = useState(false);
-
   const roomsChannels = channels.filter((c) => c.category === "Rooms");
   const callsChannels = channels.filter((c) => c.category === "Calls");
   const router = useRouter();
@@ -32,178 +28,53 @@ export function ChannelList({
   return (
     <>
       <div className="channel-sidebar">
-        <div className="channel-sidebar-header">
-          <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {guildName}
-          </span>
+        <div className="channel-header">
+          <div className="server-name-section">
+            {isPublic && <Globe size={16} className="public-indicator" />}
+            <span className="channel-name">{guildName}</span>
+          </div>
+          <div className="header-buttons">
+            <button onClick={onInvite} aria-label="Invite people" title="Invite people" className="header-btn header-btn--invite">+</button>
+            <button onClick={() => router.push(`/guilds/${guildId}/settings`)} aria-label="Server settings" title="Server settings" className="header-btn">
+              <Settings size={18} strokeWidth={2} />
+            </button>
+          </div>
         </div>
 
-        <ul className="channel-list">
+        <ul className="channel-list" role="navigation" aria-label={`Channels in ${guildName}`}>
           {roomsChannels.length > 0 && (
             <>
-              <li style={{
-                listStyle: "none",
-                padding: "14px 10px 5px",
-                fontSize: 10,
-                fontWeight: 600,
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                color: "var(--text-muted)",
-                userSelect: "none",
-              }}>
-                🏠 Rooms
+              <li className="category-header">
+                <span className="category-title">Text Channels</span>
+                <button onClick={() => setShowCreateModal(true)} aria-label="Add text channel" className="add-channel-btn">+</button>
               </li>
               {roomsChannels.map((channel) => (
-                <ChannelItem
-                  key={channel.id}
-                  channel={channel}
-                  isSelected={currentChannelId === channel.id}
-                  guildId={guildId}
-                />
+                <ChannelItem key={channel.id} channel={channel} isSelected={currentChannelId === channel.id} guildId={guildId} />
               ))}
             </>
           )}
 
           {callsChannels.length > 0 && (
             <>
-              <li style={{
-                listStyle: "none",
-                padding: "14px 10px 5px",
-                fontSize: 10,
-                fontWeight: 600,
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                color: "var(--text-muted)",
-                userSelect: "none",
-              }}>
-                📞 Calls
+              <li className="category-header">
+                <span className="category-title">Voice Channels</span>
+                <button onClick={() => setShowCreateModal(true)} aria-label="Add voice channel" className="add-channel-btn">+</button>
               </li>
               {callsChannels.map((channel) => (
-                <ChannelItem
-                  key={channel.id}
-                  channel={channel}
-                  isSelected={currentChannelId === channel.id}
-                  guildId={guildId}
-                />
+                <ChannelItem key={channel.id} channel={channel} isSelected={currentChannelId === channel.id} guildId={guildId}
+                  onJoinVoice={(chName) => onJoinVoice?.(chName, guildName)} />
               ))}
             </>
           )}
 
-          {channels.length === 0 && (
-            <li style={{
-              listStyle: "none",
-              textAlign: "center",
-              color: "var(--text-muted)",
-              fontSize: 13,
-              padding: "32px 8px",
-            }}>
-              No channels yet
-            </li>
-          )}
+          {channels.length === 0 && <li className="channel-list-empty">No channels yet</li>}
         </ul>
 
-        <div style={{ padding: "0 8px 12px", display: "flex", flexDirection: "column", gap: 6 }}>
-          <button
-            onClick={onInvite}
-            style={{
-              width: "100%",
-              padding: "8px 12px",
-              background: "var(--bg-hover)",
-              border: "1px solid var(--border)",
-              borderRadius: "var(--radius)",
-              color: "var(--text-secondary)",
-              fontSize: 13,
-              fontWeight: 600,
-              fontFamily: "inherit",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 6,
-              transition: "color 0.12s, border-color 0.12s",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = "var(--success)";
-              e.currentTarget.style.borderColor = "var(--success)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = "var(--text-secondary)";
-              e.currentTarget.style.borderColor = "var(--border)";
-            }}
-          >
-            ＋ Invite People
-          </button>
-
-          <button
-            onClick={() => router.push(`/guilds/${guildId}/settings`)}
-            style={{
-              width: "100%",
-              padding: "8px 12px",
-              background: "var(--bg-hover)",
-              border: "1px solid var(--border)",
-              borderRadius: "var(--radius)",
-              color: "var(--text-secondary)",
-              fontSize: 13,
-              fontWeight: 600,
-              fontFamily: "inherit",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 6,
-              transition: "color 0.12s, border-color 0.12s",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = "var(--text-primary)";
-              e.currentTarget.style.borderColor = "var(--text-primary)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = "var(--text-secondary)";
-              e.currentTarget.style.borderColor = "var(--border)";
-            }}
-          >
-            ⚙ Server Settings
-          </button>
-
-          <button
-            onClick={() => setShowCreateModal(true)}
-            style={{
-              width: "100%",
-              padding: "8px 12px",
-              background: "var(--bg-hover)",
-              border: "1px solid var(--border)",
-              borderRadius: "var(--radius)",
-              color: "var(--text-secondary)",
-              fontSize: 13,
-              fontWeight: 600,
-              fontFamily: "inherit",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 6,
-              transition: "color 0.12s, border-color 0.12s",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = "var(--accent)";
-              e.currentTarget.style.borderColor = "var(--accent)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = "var(--text-secondary)";
-              e.currentTarget.style.borderColor = "var(--border)";
-            }}
-          >
-            ＋ Add Channel
-          </button>
-        </div>
+        {bottomSlot && <div className="channel-bottom-slot">{bottomSlot}</div>}
       </div>
 
       {showCreateModal && (
-        <CreateChannelModal
-          isOpen={showCreateModal}
-          onClose={() => setShowCreateModal(false)}
-          onSubmit={onCreateChannel}
-        />
+        <CreateChannelModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} onSubmit={onCreateChannel} />
       )}
     </>
   );

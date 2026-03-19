@@ -1,6 +1,7 @@
 "use client";
 
 import type { Message } from "@/types";
+import { MessageCircle } from "lucide-react";
 import MessageItem from "./MessageItem";
 import { useEffect, useRef } from "react";
 
@@ -22,7 +23,7 @@ export default function MessageList({ messages, isLoading = false, currentUserId
   if (isLoading) {
     return (
       <div className="empty-state">
-        <div style={{ fontSize: 48, opacity: 0.2 }}>💬</div>
+        <MessageCircle size={48} style={{ opacity: 0.2 }} />
         <span
           style={{
             fontFamily: "var(--font-display, 'Rajdhani', sans-serif)",
@@ -40,7 +41,7 @@ export default function MessageList({ messages, isLoading = false, currentUserId
   if (messages.length === 0) {
     return (
       <div className="empty-state">
-        <div style={{ fontSize: 52, opacity: 0.2 }}>💬</div>
+        <MessageCircle size={52} style={{ opacity: 0.2 }} />
         <span
           style={{
             fontFamily: "var(--font-display, 'Rajdhani', sans-serif)",

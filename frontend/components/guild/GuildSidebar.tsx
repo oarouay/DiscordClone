@@ -12,113 +12,43 @@ type GuildSidebarProps = {
   onCreateGuild: (name: string, type: "HOUSE" | "CRIB") => Promise<void>;
 };
 
-export function GuildSidebar({
-  guilds,
-  currentGuildId,
-  onGuildSelect,
-  onCreateGuild,
-}: GuildSidebarProps) {
+export function GuildSidebar({ guilds, currentGuildId, onGuildSelect, onCreateGuild }: GuildSidebarProps) {
   const [showCreateModal, setShowCreateModal] = useState(false);
-
-  const houses = guilds.filter((g) => g.guildType === "HOUSE");
-  const cribs = guilds.filter((g) => g.guildType === "CRIB");
 
   return (
     <>
-      <div className="guild-sidebar">
-        {/* DMs */}
+      <div className="guild-sidebar" role="navigation" aria-label="Server list">
         <button
           onClick={() => onGuildSelect("")}
-          className="guild-icon"
+          className={`guild-dm-btn${!currentGuildId ? " guild-dm-btn--active" : ""}`}
           title="Direct Messages"
-          style={{
-            fontSize: 20,
-            background: !currentGuildId ? "var(--accent)" : undefined,
-            borderRadius: !currentGuildId ? "var(--radius)" : undefined,
-            color: !currentGuildId ? "#fff" : undefined,
-          }}
+          aria-label="Go to Direct Messages"
         >
-          💬
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
         </button>
 
-        {/* Divider */}
-        <div style={{ width: 28, height: 1, background: "var(--border)", margin: "2px 0", flexShrink: 0 }} />
+        <div className="guild-divider" aria-hidden="true" />
 
-        {/* Houses */}
-        {houses.map((guild) => (
+        {guilds.map((guild) => (
           <button
             key={guild.id}
             onClick={() => onGuildSelect(guild.id)}
-            className="guild-icon"
+            className={`guild-btn${currentGuildId === guild.id ? " active" : ""}`}
             title={guild.name}
-            style={{
-              padding: 0,
-              background: currentGuildId === guild.id ? "var(--accent)" : undefined,
-              borderRadius: currentGuildId === guild.id ? "var(--radius)" : undefined,
-            }}
+            aria-label={`Switch to ${guild.name}`}
+            aria-current={currentGuildId === guild.id ? "page" : undefined}
           >
             <GuildIcon guild={guild} size="md" />
           </button>
         ))}
 
-        {/* Divider before cribs */}
-        {cribs.length > 0 && (
-          <div style={{ width: 28, height: 1, background: "var(--border)", margin: "2px 0", flexShrink: 0 }} />
-        )}
-
-        {/* Cribs */}
-        {cribs.map((guild) => (
-          <button
-            key={guild.id}
-            onClick={() => onGuildSelect(guild.id)}
-            className="guild-icon"
-            title={guild.name}
-            style={{
-              padding: 0,
-              background: currentGuildId === guild.id ? "var(--accent)" : undefined,
-              borderRadius: currentGuildId === guild.id ? "var(--radius)" : undefined,
-            }}
-          >
-            <GuildIcon guild={guild} size="md" />
-          </button>
-        ))}
-
-        {/* Create server */}
-        <button
-          onClick={() => setShowCreateModal(true)}
-          title="Create Server"
-          className="guild-icon"
-          style={{
-            border: "1.5px dashed var(--text-muted)",
-            background: "transparent",
-            color: "var(--text-muted)",
-            fontSize: 22,
-          }}
-          onMouseEnter={(e) => {
-            const el = e.currentTarget;
-            el.style.background = "var(--success)";
-            el.style.color = "#000";
-            el.style.borderColor = "var(--success)";
-            el.style.borderRadius = "var(--radius)";
-          }}
-          onMouseLeave={(e) => {
-            const el = e.currentTarget;
-            el.style.background = "transparent";
-            el.style.color = "var(--text-muted)";
-            el.style.borderColor = "var(--text-muted)";
-            el.style.borderRadius = "50%";
-          }}
-        >
-          ＋
-        </button>
+        <button onClick={() => setShowCreateModal(true)} title="Create Server" aria-label="Create a new server" className="guild-create-btn">+</button>
       </div>
 
       {showCreateModal && (
-        <CreateGuildModal
-          isOpen={showCreateModal}
-          onClose={() => setShowCreateModal(false)}
-          onSubmit={onCreateGuild}
-        />
+        <CreateGuildModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} onSubmit={onCreateGuild} />
       )}
     </>
   );

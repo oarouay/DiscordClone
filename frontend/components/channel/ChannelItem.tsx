@@ -2,45 +2,49 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { MessageCircle, Mic } from "lucide-react";
 import type { Channel } from "@/types";
 
 type ChannelItemProps = {
   channel: Channel;
   isSelected: boolean;
   guildId: string;
+  onJoinVoice?: (channelName: string) => void;
 };
 
-export function ChannelItem({ channel, isSelected, guildId }: ChannelItemProps) {
+export function ChannelItem({ channel, isSelected, guildId, onJoinVoice }: ChannelItemProps) {
   const [hovered, setHovered] = useState(false);
-  const icon = channel.type === "VOICE" ? "🎤" : "💬";
-
-  const bg = isSelected ? "var(--bg-hover)" : hovered ? "var(--bg-hover)" : "transparent";
-  const color = isSelected ? "var(--accent)" : hovered ? "var(--text-primary)" : undefined;
+  const isVoice = channel.type === "VOICE";
 
   return (
     <li style={{ listStyle: "none" }}>
       <Link
-        href={`/guilds/${guildId}/${channel.id}`}
-        className="channel-item"
-        style={{ background: bg, color }}
+        href={isVoice ? "#" : `/guilds/${guildId}/${channel.id}`}
+        className={`channel-item ${isSelected ? "active" : ""}`}
+        style={{ 
+          backgroundColor: isSelected || hovered ? "var(--bg-hover)" : undefined,
+          color: isSelected ? "var(--accent)" : hovered ? "var(--text-primary)" : undefined,
+        }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
+        onClick={isVoice ? (e) => { e.preventDefault(); onJoinVoice?.(channel.name); } : undefined}
+        aria-current={isSelected ? "page" : undefined}
+        aria-label={`${isVoice ? "Voice" : "Text"} channel: ${channel.name}`}
       >
         {isSelected && (
           <span
-            style={{
-              position: "absolute",
-              left: 0,
-              top: "20%",
-              height: "60%",
-              width: 3,
-              background: "var(--accent)",
-              borderRadius: "0 3px 3px 0",
-            }}
+            className="channel-selection-indicator"
+            aria-hidden="true"
           />
         )}
-        <span style={{ fontSize: 13, opacity: 0.65, flexShrink: 0 }}>{icon}</span>
-        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <span className="channel-icon" aria-hidden="true">
+          {isVoice ? (
+            <Mic size={16} strokeWidth={2} />
+          ) : (
+            <MessageCircle size={16} strokeWidth={2} />
+          )}
+        </span>
+        <span className="channel-item-text">
           {channel.name}
         </span>
       </Link>

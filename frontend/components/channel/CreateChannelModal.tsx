@@ -44,14 +44,14 @@ export function CreateChannelModal({
   if (!isOpen) return null;
 
   const typeOpts: Array<{ value: "TEXT" | "VOICE"; label: string; desc: string }> = [
-    { value: "TEXT",  label: "💬 Text Channel",  desc: "Send messages and media" },
-    { value: "VOICE", label: "🎤 Voice Channel", desc: "Hang out over voice" },
+    { value: "TEXT",  label: "Text Channel",  desc: "Send messages and media" },
+    { value: "VOICE", label: "Voice Channel", desc: "Hang out over voice" },
   ];
 
   const subTypeOpts: Array<{ value: "DEFAULT" | "ANNOUNCEMENTS" | "FORUMS"; label: string }> = [
-    { value: "DEFAULT",       label: "💬 Chat" },
-    { value: "ANNOUNCEMENTS", label: "📢 Announcements" },
-    { value: "FORUMS",        label: "💭 Forums" },
+    { value: "DEFAULT",       label: "Chat" },
+    { value: "ANNOUNCEMENTS", label: "Announcements" },
+    { value: "FORUMS",        label: "Forums" },
   ];
 
   const fieldLabel: React.CSSProperties = {

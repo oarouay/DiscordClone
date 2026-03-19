@@ -7,7 +7,13 @@ import { ChannelList } from "./ChannelList";
 import { InviteModal } from "@/components/guild/InviteModal";
 import type { Channel } from "@/types";
 
-export function ChannelSidebar() {
+export function ChannelSidebar({
+  bottomSlot,
+  onJoinVoice,
+}: {
+  bottomSlot?: React.ReactNode;
+  onJoinVoice?: (channelName: string, guildName: string) => void;
+}) {
   usePathname();
   const params = useParams();
   const guildId = params?.guildId as string | undefined;
@@ -17,7 +23,6 @@ export function ChannelSidebar() {
   const guild = mockGuilds.find((g) => g.id === guildId);
 
   const handleCreateChannel = async (name: string, type: "TEXT" | "VOICE", category: string) => {
-    // TODO: replace with API call to POST /guilds/:guildId/channels
     if (guild) {
       const newChannel: Channel = {
         id: String(Date.now()),
@@ -32,7 +37,14 @@ export function ChannelSidebar() {
     }
   };
 
-  if (!guild) return null;
+  // No guild — only render bottom slot
+  if (!guild) {
+    return (
+      <div className="channel-sidebar">
+        {bottomSlot && <div className="channel-bottom-slot">{bottomSlot}</div>}
+      </div>
+    );
+  }
 
   return (
     <>
@@ -40,16 +52,15 @@ export function ChannelSidebar() {
         channels={guild.channels}
         guildId={guild.id}
         guildName={guild.name}
+        isPublic={!guild.isPrivate}
         currentChannelId={channelId}
         onCreateChannel={handleCreateChannel}
         onInvite={() => setShowInvite(true)}
+        onJoinVoice={onJoinVoice}
+        bottomSlot={bottomSlot}
       />
       {showInvite && (
-        <InviteModal
-          guildId={guild.id}
-          guildName={guild.name}
-          onClose={() => setShowInvite(false)}
-        />
+        <InviteModal guildId={guild.id} guildName={guild.name} onClose={() => setShowInvite(false)} />
       )}
     </>
   );

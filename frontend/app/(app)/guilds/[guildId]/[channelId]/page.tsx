@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic";
 
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
+import { MessageCircle, Mic } from "lucide-react";
 import { mockGuilds, mockMessages, mockUser } from "@/lib/mock";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { VoiceChannel } from "@/components/voice/VoiceChannel";
@@ -71,7 +72,7 @@ export default function ChannelPage() {
   if (!guild || !channel) {
     return (
       <div className="empty-state">
-        <div style={{ fontSize: 52, opacity: 0.2 }}>💬</div>
+        <MessageCircle size={52} style={{ opacity: 0.2 }} />
         <span style={{
           fontFamily: "var(--font-display, 'Rajdhani', sans-serif)",
           fontSize: 20, fontWeight: 700, color: "var(--text-secondary)",
@@ -94,7 +95,7 @@ export default function ChannelPage() {
     );
   }
 
-  const channelIcon = "💬";
+  const channelIcon = channel.type === "TEXT" ? <MessageCircle size={18} /> : <Mic size={18} />;
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -107,7 +108,7 @@ export default function ChannelPage() {
         background: "var(--bg-primary)",
         flexShrink: 0,
       }}>
-        <span style={{ fontSize: 18 }}>{channelIcon}</span>
+        {channelIcon}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
             fontFamily: "var(--font-display, 'Rajdhani', sans-serif)",
@@ -127,7 +128,7 @@ export default function ChannelPage() {
             background: "rgba(61,220,151,0.1)",
             padding: "3px 10px", borderRadius: 99,
           }}>
-            ● Live
+            Live
           </span>
         )}
       </div>

@@ -53,11 +53,11 @@ export function InviteModal({ guildId, guildName, onClose }: Props) {
   const inviteUrl = invite ? `${typeof window !== "undefined" ? window.location.origin : ""}/invite/${invite.code}` : "";
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-overlay" onClick={onClose} role="presentation">
+      <div className="modal-card" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="invite-modal-title">
         <div className="modal-header">
-          <h2 className="modal-title">Invite people to {guildName}</h2>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <h2 className="modal-title" id="invite-modal-title">Invite people to {guildName}</h2>
+          <button className="modal-close" onClick={onClose} aria-label="Close invite modal">✕</button>
         </div>
 
         <div className="modal-body">
@@ -70,10 +70,11 @@ export function InviteModal({ guildId, guildName, onClose }: Props) {
                 onClick={handleGenerate}
                 disabled={isLoading}
                 className="invite-generate-btn"
+                aria-label={isLoading ? "Generating invite link..." : "Generate invite link"}
               >
                 {isLoading ? "Generating…" : "Generate Invite Link"}
               </Button>
-              {error && <p className="auth-error">{error}</p>}
+              {error && <p className="auth-error" role="alert">{error}</p>}
             </>
           ) : (
             <>
@@ -81,18 +82,19 @@ export function InviteModal({ guildId, guildName, onClose }: Props) {
                 Share this link with anyone you want to invite.
               </p>
               <div className="invite-link-row">
-                <div className="invite-link-box">
+                <div className="invite-link-box" role="textbox" aria-readonly="true">
                   {inviteUrl}
                 </div>
                 <Button
                   onClick={handleCopy}
                   className={`invite-copy-btn ${copied ? "invite-copy-btn-success" : ""}`}
+                  aria-label={copied ? "Invite link copied to clipboard" : "Copy invite link"}
                 >
                   {copied ? "Copied!" : "Copy"}
                 </Button>
               </div>
-              <p className="invite-expiry">{formatExpiry(invite.expiresAt)}</p>
-              <button className="invite-regenerate" onClick={() => setInvite(null)}>
+              <p className="invite-expiry" aria-live="polite">{formatExpiry(invite.expiresAt)}</p>
+              <button className="invite-regenerate" onClick={() => setInvite(null)} aria-label="Generate a new invite link">
                 Generate a new link
               </button>
             </>
