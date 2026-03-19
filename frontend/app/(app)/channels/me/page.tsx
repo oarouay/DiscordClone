@@ -3,16 +3,26 @@
 export const dynamic = "force-dynamic";
 
 import { useState, useEffect } from "react";
+import { MessageCircle } from "lucide-react";
 import { mockDMConversations, mockDMMessages, mockUser } from "@/lib/mock";
 import { useWebSocket } from "@/hooks/useWebSocket";
-import DMList from "@/components/dm/DMList";
+import { useAuth } from "@/context/AuthContext";
+import { DMSidebar } from "@/components/dm/DMSidebar";
+import { UserPanel } from "@/components/shared/UserPanel";
+import { VoiceControls } from "@/components/voice/VoiceControls";
 import MessageList from "@/components/chat/MessageList";
 import MessageInput from "@/components/chat/MessageInput";
 import type { Message } from "@/types";
 
+const MOCK_RICH_PRESENCE = { activity: "Playing Elden Ring", detail: "Exploring Limgrave • 2h 14m" };
+
 export default function DirectMessagesPage() {
-  const [selectedUserId, setSelectedUserId] = useState<string>(mockDMConversations[0]?.id);
+  const { user } = useAuth();
+  const [selectedUserId, setSelectedUserId] = useState<string>();
   const [messages, setMessages] = useState<Message[]>([]);
+  const [voiceChannel, setVoiceChannel] = useState<{ channelName: string; guildName: string } | null>(null);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isDeafened, setIsDeafened] = useState(false);
 
   const selectedUser = mockDMConversations.find((u) => u.id === selectedUserId);
   const dmChannelId = selectedUserId ? `dm_${selectedUserId}` : "";
@@ -70,56 +80,69 @@ export default function DirectMessagesPage() {
   const statusColor = (status: string) =>
     status === "online" ? "var(--success)" : "var(--warning)";
   const statusLabel = (status: string) =>
-    status === "online" ? "● Online" : "◐ Idle";
+    status === "online" ? "Online" : "Idle";
+
+  if (mockDMConversations.length === 0) {
+    return (
+      <div className="empty-state">
+        <MessageCircle size={52} style={{ opacity: 0.2 }} />
+        <span
+          style={{
+            fontFamily: "var(--font-display, 'Rajdhani', sans-serif)",
+            fontSize: 20,
+            fontWeight: 700,
+            color: "var(--text-secondary)",
+          }}
+        >
+          No conversations yet
+        </span>
+        <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
+          Start a new direct message to begin chatting.
+        </span>
+      </div>
+    );
+  }
+
+  const bottomSlot = user ? (
+    <>
+      {voiceChannel && (
+        <div className="voice-bar-wrap">
+          <div className="voice-bar-inner">
+            <p className="voice-bar-channel">🔊 {voiceChannel.channelName}</p>
+            <p className="voice-bar-guild">{voiceChannel.guildName}</p>
+            <VoiceControls
+              isMuted={isMuted}
+              isDeafened={isDeafened}
+              onToggleMute={() => setIsMuted((m) => !m)}
+              onToggleDeafen={() => setIsDeafened((d) => !d)}
+              onLeave={() => { setVoiceChannel(null); setIsMuted(false); setIsDeafened(false); }}
+            />
+          </div>
+        </div>
+      )}
+      <UserPanel
+        user={user}
+        richPresence={MOCK_RICH_PRESENCE}
+        isMuted={isMuted}
+        isDeafened={isDeafened}
+        onToggleMute={() => setIsMuted((m) => !m)}
+        onToggleDeafen={() => setIsDeafened((d) => !d)}
+        onLogout={() => {}}
+        onSave={(updates) => { Object.assign(user, updates); }}
+      />
+    </>
+  ) : null;
 
   return (
     <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
-      {/* DM List Sidebar */}
-      <div
-        style={{
-          width: 240,
-          minWidth: 240,
-          background: "var(--bg-secondary)",
-          borderRight: "1px solid var(--border)",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <div
-          style={{
-            height: 52,
-            minHeight: 52,
-            borderBottom: "1px solid var(--border)",
-            padding: "0 16px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flexShrink: 0,
-          }}
-        >
-          <h2
-            style={{
-              fontFamily: "var(--font-display, 'Rajdhani', sans-serif)",
-              fontSize: 16,
-              fontWeight: 700,
-              color: "var(--text-primary)",
-              letterSpacing: "0.3px",
-            }}
-          >
-            Direct Messages
-          </h2>
-          {isConnected && (
-            <span style={{ fontSize: 11, color: "var(--success)", fontWeight: 500 }}>
-              ● Live
-            </span>
-          )}
-        </div>
-        <DMList
-          conversations={mockDMConversations}
-          selectedUserId={selectedUserId}
-          onSelectUser={setSelectedUserId}
-        />
-      </div>
+      {/* DM Sidebar */}
+      <DMSidebar
+        conversations={mockDMConversations}
+        selectedUserId={selectedUserId}
+        onSelectUser={setSelectedUserId}
+        isConnected={isConnected}
+        bottomSlot={bottomSlot}
+      />
 
       {/* DM Chat Area */}
       {selectedUser ? (
@@ -138,7 +161,7 @@ export default function DirectMessagesPage() {
               flexShrink: 0,
             }}
           >
-            <span style={{ fontSize: 18 }}>💬</span>
+            <MessageCircle size={18} style={{ color: "var(--text-primary)" }} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div
                 style={{
@@ -171,24 +194,7 @@ export default function DirectMessagesPage() {
           />
           <MessageInput channelName={selectedUser.displayName} onSend={handleSendMessage} />
         </div>
-      ) : (
-        <div className="empty-state">
-          <div style={{ fontSize: 52, opacity: 0.2 }}>💬</div>
-          <span
-            style={{
-              fontFamily: "var(--font-display, 'Rajdhani', sans-serif)",
-              fontSize: 20,
-              fontWeight: 700,
-              color: "var(--text-secondary)",
-            }}
-          >
-            No conversation selected
-          </span>
-          <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
-            Pick someone from the list to start chatting.
-          </span>
-        </div>
-      )}
+      ) : null}
     </div>
   );
 }

@@ -32,25 +32,17 @@ export function Avatar({ user, size = "md" }: { user: User; size?: "sm" | "md" |
 
   return (
     <div
+      className="avatar"
       style={{
         width: dim,
         height: dim,
         minWidth: dim,
-        borderRadius: "50%",
-        background: avatarColor(user.username),
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        color: "#fff",
-        fontFamily: "var(--font-display, 'Rajdhani', sans-serif)",
-        fontWeight: 700,
-        fontSize: font,
-        letterSpacing: "0.5px",
-        userSelect: "none",
-        flexShrink: 0,
+        backgroundColor: user.avatarUrl ? undefined : avatarColor(user.username),
+        backgroundImage: user.avatarUrl ? `url(${user.avatarUrl})` : undefined,
+        ...(user.avatarUrl ? { backgroundSize: "cover", backgroundPosition: "center" } : {}),
       }}
     >
-      {initials}
+      {!user.avatarUrl && initials}
     </div>
   );
 }
