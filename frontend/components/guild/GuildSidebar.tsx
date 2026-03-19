@@ -25,82 +25,91 @@ export function GuildSidebar({
 
   return (
     <>
-      <div className="w-24 bg-bg-tertiary border-r border-border flex flex-col items-center py-6 gap-6 h-screen overflow-y-auto">
-        {/* DMs/Condos */}
+      <div className="guild-sidebar">
+        {/* DMs */}
         <button
           onClick={() => onGuildSelect("")}
-          className={`
-            w-16 h-16 rounded-full flex items-center justify-center
-            transition-all duration-200 flex-shrink-0
-            ${
-              !currentGuildId
-                ? "bg-accent rounded-3xl"
-                : "bg-bg-secondary hover:bg-bg-primary hover:rounded-3xl"
-            }
-          `}
+          className="guild-icon"
           title="Direct Messages"
+          style={{
+            fontSize: 20,
+            background: !currentGuildId ? "var(--accent)" : undefined,
+            borderRadius: !currentGuildId ? "var(--radius)" : undefined,
+            color: !currentGuildId ? "#fff" : undefined,
+          }}
         >
-          <span className="text-2xl">💬</span>
+          💬
         </button>
 
-        <div className="w-10 h-px bg-border" />
+        {/* Divider */}
+        <div style={{ width: 28, height: 1, background: "var(--border)", margin: "2px 0", flexShrink: 0 }} />
 
         {/* Houses */}
-        <div className="flex flex-col gap-4 w-full items-center">
-          {houses.map((guild) => (
-            <button
-              key={guild.id}
-              onClick={() => onGuildSelect(guild.id)}
-              className={`
-                transition-all duration-200 flex-shrink-0
-                ${
-                  currentGuildId === guild.id
-                    ? "rounded-3xl"
-                    : "hover:rounded-3xl rounded-full"
-                }
-              `}
-              title={guild.name}
-            >
-              <GuildIcon guild={guild} size="md" />
-            </button>
-          ))}
-        </div>
+        {houses.map((guild) => (
+          <button
+            key={guild.id}
+            onClick={() => onGuildSelect(guild.id)}
+            className="guild-icon"
+            title={guild.name}
+            style={{
+              padding: 0,
+              background: currentGuildId === guild.id ? "var(--accent)" : undefined,
+              borderRadius: currentGuildId === guild.id ? "var(--radius)" : undefined,
+            }}
+          >
+            <GuildIcon guild={guild} size="md" />
+          </button>
+        ))}
 
-        <div className="w-10 h-px bg-border" />
+        {/* Divider before cribs */}
+        {cribs.length > 0 && (
+          <div style={{ width: 28, height: 1, background: "var(--border)", margin: "2px 0", flexShrink: 0 }} />
+        )}
 
         {/* Cribs */}
-        <div className="flex flex-col gap-4 w-full items-center">
-          {cribs.map((guild) => (
-            <button
-              key={guild.id}
-              onClick={() => onGuildSelect(guild.id)}
-              className={`
-                transition-all duration-200 flex-shrink-0
-                ${
-                  currentGuildId === guild.id
-                    ? "rounded-3xl"
-                    : "hover:rounded-3xl rounded-full"
-                }
-              `}
-              title={guild.name}
-            >
-              <GuildIcon guild={guild} size="md" />
-            </button>
-          ))}
-        </div>
+        {cribs.map((guild) => (
+          <button
+            key={guild.id}
+            onClick={() => onGuildSelect(guild.id)}
+            className="guild-icon"
+            title={guild.name}
+            style={{
+              padding: 0,
+              background: currentGuildId === guild.id ? "var(--accent)" : undefined,
+              borderRadius: currentGuildId === guild.id ? "var(--radius)" : undefined,
+            }}
+          >
+            <GuildIcon guild={guild} size="md" />
+          </button>
+        ))}
 
-        {/* Create Guild Button */}
+        {/* Create server */}
         <button
           onClick={() => setShowCreateModal(true)}
-          className="
-            w-16 h-16 rounded-full flex items-center justify-center
-            bg-bg-secondary hover:bg-accent hover:rounded-3xl
-            transition-all duration-200
-            text-2xl flex-shrink-0 mt-auto
-          "
           title="Create Server"
+          className="guild-icon"
+          style={{
+            border: "1.5px dashed var(--text-muted)",
+            background: "transparent",
+            color: "var(--text-muted)",
+            fontSize: 22,
+          }}
+          onMouseEnter={(e) => {
+            const el = e.currentTarget;
+            el.style.background = "var(--success)";
+            el.style.color = "#000";
+            el.style.borderColor = "var(--success)";
+            el.style.borderRadius = "var(--radius)";
+          }}
+          onMouseLeave={(e) => {
+            const el = e.currentTarget;
+            el.style.background = "transparent";
+            el.style.color = "var(--text-muted)";
+            el.style.borderColor = "var(--text-muted)";
+            el.style.borderRadius = "50%";
+          }}
         >
-          ➕
+          ＋
         </button>
       </div>
 

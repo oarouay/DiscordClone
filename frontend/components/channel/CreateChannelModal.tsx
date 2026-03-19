@@ -25,10 +25,8 @@ export function CreateChannelModal({
       setError("Channel name is required");
       return;
     }
-
     setIsLoading(true);
     setError("");
-
     try {
       const category = channelType === "TEXT" ? "Rooms" : "Calls";
       await onSubmit(name, channelType, category);
@@ -45,145 +43,221 @@ export function CreateChannelModal({
 
   if (!isOpen) return null;
 
+  const typeOpts: Array<{ value: "TEXT" | "VOICE"; label: string; desc: string }> = [
+    { value: "TEXT",  label: "💬 Text Channel",  desc: "Send messages and media" },
+    { value: "VOICE", label: "🎤 Voice Channel", desc: "Hang out over voice" },
+  ];
+
+  const subTypeOpts: Array<{ value: "DEFAULT" | "ANNOUNCEMENTS" | "FORUMS"; label: string }> = [
+    { value: "DEFAULT",       label: "💬 Chat" },
+    { value: "ANNOUNCEMENTS", label: "📢 Announcements" },
+    { value: "FORUMS",        label: "💭 Forums" },
+  ];
+
+  const fieldLabel: React.CSSProperties = {
+    display: "block",
+    fontSize: 11,
+    fontWeight: 600,
+    letterSpacing: "0.08em",
+    textTransform: "uppercase",
+    color: "var(--text-muted)",
+    marginBottom: 8,
+  };
+
+  const radioRow = (selected: boolean): React.CSSProperties => ({
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    padding: "10px 14px",
+    background: selected ? "rgba(108,111,255,0.08)" : "var(--bg-floating)",
+    border: `1px solid ${selected ? "var(--accent)" : "var(--border)"}`,
+    borderRadius: "var(--radius)",
+    cursor: "pointer",
+    transition: "border-color 0.12s, background 0.12s",
+  });
+
+  const radioDot = (selected: boolean): React.CSSProperties => ({
+    width: 16,
+    height: 16,
+    borderRadius: "50%",
+    flexShrink: 0,
+    border: `2px solid ${selected ? "var(--accent)" : "var(--text-muted)"}`,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    transition: "border-color 0.12s",
+  });
+
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-bg-floating rounded-lg shadow-lg max-w-md w-full mx-4">
-        <div className="p-8">
-          <h2 className="text-2xl font-bold text-text-primary mb-2">
-            Create a New Channel
-          </h2>
-          <p className="text-text-muted text-sm mb-8">
-            Add a new text or voice channel to your server
-          </p>
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.65)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 50,
+        backdropFilter: "blur(4px)",
+      }}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div
+        style={{
+          background: "var(--bg-secondary)",
+          border: "1px solid var(--border)",
+          borderRadius: "var(--radius-lg)",
+          width: 440,
+          maxWidth: "95vw",
+          padding: 32,
+          boxShadow: "0 32px 80px rgba(0,0,0,0.55)",
+        }}
+      >
+        <h2
+          style={{
+            fontFamily: "var(--font-display, 'Rajdhani', sans-serif)",
+            fontSize: 24,
+            fontWeight: 700,
+            color: "var(--text-primary)",
+            marginBottom: 6,
+          }}
+        >
+          Add a Channel
+        </h2>
+        <p style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 28 }}>
+          Create a text room or voice call channel
+        </p>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          {/* Channel type */}
+          <div>
+            <label style={fieldLabel}>Channel Type</label>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {typeOpts.map(({ value, label, desc }) => (
+                <label key={value} style={radioRow(channelType === value)} onClick={() => setChannelType(value)}>
+                  <div style={radioDot(channelType === value)}>
+                    {channelType === value && (
+                      <div style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--accent)" }} />
+                    )}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>{label}</div>
+                    <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>{desc}</div>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Sub-type (TEXT only) */}
+          {channelType === "TEXT" && (
             <div>
-              <label className="block text-sm font-semibold text-text-secondary mb-4 uppercase tracking-wide">
-                Channel Type
-              </label>
-              <div className="space-y-3">
-                <label className="flex items-center gap-4 cursor-pointer p-3 rounded-lg hover:bg-bg-primary/50 transition-colors">
-                  <input
-                    type="radio"
-                    name="channelType"
-                    value="TEXT"
-                    checked={channelType === "TEXT"}
-                    onChange={(e) => setChannelType(e.target.value as "TEXT" | "VOICE")}
-                    className="w-5 h-5"
-                  />
-                  <p className="text-base font-medium text-text-primary">💬 Text Channel</p>
-                </label>
-
-                <label className="flex items-center gap-4 cursor-pointer p-3 rounded-lg hover:bg-bg-primary/50 transition-colors">
-                  <input
-                    type="radio"
-                    name="channelType"
-                    value="VOICE"
-                    checked={channelType === "VOICE"}
-                    onChange={(e) => setChannelType(e.target.value as "TEXT" | "VOICE")}
-                    className="w-5 h-5"
-                  />
-                  <p className="text-base font-medium text-text-primary">🎤 Voice Channel</p>
-                </label>
+              <label style={fieldLabel}>Channel Subtype</label>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {subTypeOpts.map(({ value, label }) => (
+                  <label key={value} style={radioRow(subType === value)} onClick={() => setSubType(value)}>
+                    <div style={radioDot(subType === value)}>
+                      {subType === value && (
+                        <div style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--accent)" }} />
+                      )}
+                    </div>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: "var(--text-primary)" }}>{label}</div>
+                  </label>
+                ))}
               </div>
             </div>
+          )}
 
-            {/* Text Channel Subtypes */}
-            {channelType === "TEXT" && (
-              <div>
-                <label className="block text-sm font-semibold text-text-secondary mb-4 uppercase tracking-wide">
-                  Channel Subtype
-                </label>
-                <div className="space-y-3">
-                  <label className="flex items-center gap-4 cursor-pointer p-3 rounded-lg hover:bg-bg-primary/50 transition-colors">
-                    <input
-                      type="radio"
-                      name="subType"
-                      value="DEFAULT"
-                      checked={subType === "DEFAULT"}
-                      onChange={(e) => setSubType(e.target.value as "DEFAULT" | "ANNOUNCEMENTS" | "FORUMS")}
-                      className="w-5 h-5"
-                    />
-                    <p className="text-base font-medium text-text-primary">💬 Chat</p>
-                  </label>
+          {/* Channel name */}
+          <div>
+            <label style={fieldLabel}>Channel Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={channelType === "TEXT" ? "e.g. general" : "e.g. gaming"}
+              style={{
+                width: "100%",
+                padding: "10px 14px",
+                background: "var(--bg-floating)",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--radius)",
+                color: "var(--text-primary)",
+                fontFamily: "inherit",
+                fontSize: 14,
+                outline: "none",
+                transition: "border-color 0.15s",
+              }}
+              onFocus={(e) => { e.target.style.borderColor = "var(--accent)"; }}
+              onBlur={(e)  => { e.target.style.borderColor = "var(--border)"; }}
+            />
+          </div>
 
-                  <label className="flex items-center gap-4 cursor-pointer p-3 rounded-lg hover:bg-bg-primary/50 transition-colors">
-                    <input
-                      type="radio"
-                      name="subType"
-                      value="ANNOUNCEMENTS"
-                      checked={subType === "ANNOUNCEMENTS"}
-                      onChange={(e) => setSubType(e.target.value as "DEFAULT" | "ANNOUNCEMENTS" | "FORUMS")}
-                      className="w-5 h-5"
-                    />
-                    <p className="text-base font-medium text-text-primary">📢 Announcements</p>
-                  </label>
-
-                  <label className="flex items-center gap-4 cursor-pointer p-3 rounded-lg hover:bg-bg-primary/50 transition-colors">
-                    <input
-                      type="radio"
-                      name="subType"
-                      value="FORUMS"
-                      checked={subType === "FORUMS"}
-                      onChange={(e) => setSubType(e.target.value as "DEFAULT" | "ANNOUNCEMENTS" | "FORUMS")}
-                      className="w-5 h-5"
-                    />
-                    <p className="text-base font-medium text-text-primary">💭 Forums</p>
-                  </label>
-                </div>
-              </div>
-            )}
-
-            <div>
-              <label className="block text-sm font-semibold text-text-secondary mb-3 uppercase tracking-wide">
-                Channel Name
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder={channelType === "TEXT" ? "e.g. general" : "e.g. gaming"}
-                className="
-                  w-full px-4 py-3 bg-bg-primary border border-border
-                  rounded-lg text-text-primary placeholder-text-muted text-base
-                  focus:outline-none focus:border-accent
-                "
-              />
+          {error && (
+            <div
+              style={{
+                padding: "10px 14px",
+                background: "rgba(255,92,92,0.1)",
+                border: "1px solid rgba(255,92,92,0.3)",
+                borderRadius: "var(--radius)",
+                color: "var(--danger)",
+                fontSize: 13,
+              }}
+            >
+              {error}
             </div>
+          )}
 
-            {error && (
-              <div className="bg-danger/20 border border-danger rounded-lg text-danger text-sm p-4">
-                {error}
-              </div>
-            )}
-
-            <div className="flex gap-3 justify-end pt-6 border-t border-border">
-              <button
-                type="button"
-                onClick={onClose}
-                className="
-                  px-6 py-3 rounded-lg font-semibold text-base
-                  bg-bg-secondary hover:bg-bg-primary text-text-primary
-                  transition-colors
-                "
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="
-                  px-6 py-3 rounded-lg font-semibold text-base
-                  bg-accent hover:bg-accent-hover text-white
-                  disabled:opacity-50 disabled:cursor-not-allowed
-                  transition-colors
-                "
-              >
-                {isLoading ? "Creating..." : "Create Channel"}
-              </button>
-            </div>
-          </form>
-        </div>
+          {/* Actions */}
+          <div
+            style={{
+              display: "flex",
+              gap: 10,
+              justifyContent: "flex-end",
+              paddingTop: 8,
+              borderTop: "1px solid var(--border)",
+            }}
+          >
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                padding: "9px 18px",
+                background: "var(--bg-hover)",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--radius)",
+                color: "var(--text-secondary)",
+                fontSize: 14,
+                fontWeight: 600,
+                fontFamily: "inherit",
+                cursor: "pointer",
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isLoading}
+              style={{
+                padding: "9px 22px",
+                background: "var(--accent)",
+                border: "none",
+                borderRadius: "var(--radius)",
+                color: "#fff",
+                fontSize: 14,
+                fontWeight: 600,
+                fontFamily: "inherit",
+                cursor: isLoading ? "not-allowed" : "pointer",
+                opacity: isLoading ? 0.5 : 1,
+                transition: "background 0.12s",
+              }}
+              onMouseEnter={(e) => { if (!isLoading) e.currentTarget.style.background = "var(--accent-hover)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "var(--accent)"; }}
+            >
+              {isLoading ? "Creating…" : "Create Channel"}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

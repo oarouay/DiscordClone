@@ -3,26 +3,51 @@
 import type { User } from "@/types";
 
 export function UserTag({ user, showStatus = true }: { user: User; showStatus?: boolean }) {
+  const statusColors = {
+    online:  "var(--success)",
+    idle:    "var(--warning)",
+    offline: "var(--text-muted)",
+  };
+
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex-shrink-0">
-        {showStatus && (
-          <div
-            className={`
-              w-2 h-2 rounded-full
-              ${user.status === "online" && "bg-green-500"}
-              ${user.status === "idle" && "bg-yellow-500"}
-              ${user.status === "offline" && "bg-gray-500"}
-            `}
-          />
-        )}
-      </div>
-      <div className="min-w-0">
-        <p className="text-sm font-medium text-text-primary truncate">
+    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      {showStatus && (
+        <div
+          style={{
+            width: 8,
+            height: 8,
+            borderRadius: "50%",
+            background: statusColors[user.status],
+            flexShrink: 0,
+          }}
+        />
+      )}
+      <div style={{ minWidth: 0 }}>
+        <p
+          style={{
+            fontSize: 13,
+            fontWeight: 500,
+            color: "var(--text-primary)",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            margin: 0,
+          }}
+        >
           {user.displayName || user.username}
         </p>
         {showStatus && (
-          <p className="text-xs text-text-muted truncate capitalize">
+          <p
+            style={{
+              fontSize: 11,
+              color: "var(--text-muted)",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              margin: 0,
+              textTransform: "capitalize",
+            }}
+          >
             {user.status}
           </p>
         )}
@@ -33,17 +58,27 @@ export function UserTag({ user, showStatus = true }: { user: User; showStatus?: 
 
 export function StatusBadge({ status }: { status: User["status"] }) {
   const statusConfig = {
-    online: { bg: "bg-green-500", label: "Online" },
-    idle: { bg: "bg-yellow-500", label: "Idle" },
-    offline: { bg: "bg-gray-500", label: "Offline" },
+    online:  { color: "var(--success)", label: "Online" },
+    idle:    { color: "var(--warning)", label: "Idle" },
+    offline: { color: "var(--text-muted)", label: "Offline" },
   };
 
-  const config = statusConfig[status];
+  const { color, label } = statusConfig[status];
 
   return (
-    <div className="flex items-center gap-2">
-      <div className={`w-2 h-2 rounded-full ${config.bg}`} />
-      <span className="text-xs text-text-secondary">{config.label}</span>
+    <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+      <div
+        style={{
+          width: 8,
+          height: 8,
+          borderRadius: "50%",
+          background: color,
+          flexShrink: 0,
+        }}
+      />
+      <span style={{ fontSize: 12, color: "var(--text-secondary)", fontWeight: 500 }}>
+        {label}
+      </span>
     </div>
   );
 }

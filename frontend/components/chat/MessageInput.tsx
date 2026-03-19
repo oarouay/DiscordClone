@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useState, useRef, useEffect } from "react";
 
 interface MessageInputProps {
   channelName: string;
@@ -12,17 +11,21 @@ interface MessageInputProps {
 export default function MessageInput({ channelName, isDisabled = false, onSend }: MessageInputProps) {
   const [content, setContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-grow textarea
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.style.height = "auto";
+      ref.current.style.height = `${ref.current.scrollHeight}px`;
+    }
+  }, [content]);
 
   const handleSend = async () => {
     if (!content.trim() || isDisabled) return;
-
     setIsLoading(true);
-    
-    // TODO: Replace with API call to send message
     try {
-      if (onSend) {
-        onSend(content);
-      }
+      if (onSend) onSend(content);
       setContent("");
     } finally {
       setIsLoading(false);
@@ -36,25 +39,77 @@ export default function MessageInput({ channelName, isDisabled = false, onSend }
     }
   };
 
+  const canSend = !!content.trim() && !isDisabled && !isLoading;
+
   return (
-    <div className="px-6 pb-6 pt-6 border-t border-bg-secondary">
-      <div className="flex gap-4">
+    <div style={{ padding: "12px 20px 18px", borderTop: "1px solid var(--border)" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-end",
+          gap: 10,
+          background: "var(--bg-hover)",
+          border: "1px solid var(--border)",
+          borderRadius: "var(--radius)",
+          padding: "10px 14px",
+          transition: "border-color 0.15s",
+        }}
+        onFocusCapture={(e) => { e.currentTarget.style.borderColor = "var(--accent)"; }}
+        onBlurCapture={(e)  => { e.currentTarget.style.borderColor = "var(--border)"; }}
+      >
         <textarea
+          ref={ref}
           value={content}
           onChange={(e) => setContent(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={isDisabled || isLoading}
-          placeholder={isDisabled ? "💡 Chat coming in Commit 7" : `Message #${channelName}`}
-          className="flex-1 bg-input border border-input rounded-lg px-5 py-4 text-text-primary placeholder-text-muted resize-none focus:outline-none focus:border-accent disabled:opacity-50 disabled:cursor-not-allowed max-h-96 text-base"
+          placeholder={isDisabled ? "💡 Voice channels coming in Commit 10" : `Message #${channelName}`}
           rows={1}
+          style={{
+            flex: 1,
+            background: "transparent",
+            border: "none",
+            outline: "none",
+            color: "var(--text-primary)",
+            fontFamily: "inherit",
+            fontSize: 14,
+            resize: "none",
+            maxHeight: 140,
+            lineHeight: 1.5,
+            opacity: isDisabled ? 0.5 : 1,
+          }}
         />
-        <Button
+
+        <button
           onClick={handleSend}
-          disabled={!content.trim() || isDisabled || isLoading}
-          className="self-end"
+          disabled={!canSend}
+          style={{
+            width: 34,
+            height: 34,
+            borderRadius: "var(--radius-sm)",
+            background: canSend ? "var(--accent)" : "transparent",
+            border: `1px solid ${canSend ? "var(--accent)" : "var(--border)"}`,
+            color: canSend ? "#fff" : "var(--text-muted)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: canSend ? "pointer" : "not-allowed",
+            flexShrink: 0,
+            transition: "background 0.12s, border-color 0.12s, color 0.12s, transform 0.1s",
+          }}
+          onMouseEnter={(e) => { if (canSend) e.currentTarget.style.background = "var(--accent-hover)"; }}
+          onMouseLeave={(e) => { if (canSend) e.currentTarget.style.background = "var(--accent)"; }}
+          onMouseDown={(e)  => { if (canSend) e.currentTarget.style.transform = "scale(0.92)"; }}
+          onMouseUp={(e)    => { e.currentTarget.style.transform = "scale(1)"; }}
         >
-          {isLoading ? "Sending..." : "Send"}
-        </Button>
+          {isLoading ? (
+            <span style={{ fontSize: 14 }}>⏳</span>
+          ) : (
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+              <path d="M14 8L2 2l3 6-3 6 12-6z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+            </svg>
+          )}
+        </button>
       </div>
     </div>
   );

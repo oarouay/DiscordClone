@@ -1,11 +1,14 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { mockGuilds, mockMessages, mockUser } from "@/lib/mock";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import MessageList from "@/components/chat/MessageList";
 import MessageInput from "@/components/chat/MessageInput";
+import { MemberList } from "@/components/guild/MemberList";
 import type { Message } from "@/types";
 
 export default function ChannelPage() {
@@ -17,20 +20,16 @@ export default function ChannelPage() {
   const guild = mockGuilds.find((g) => g.id === guildId);
   const channel = guild?.channels.find((c) => c.id === channelId);
 
-  // WebSocket hook for real-time messages
   const { isConnected, send } = useWebSocket({
     onMessage: (message: Message) => {
-      // Add incoming message to the current channel
       if (message.channelId === channelId) {
         setMessages((prev) => [...prev, message]);
       }
     },
   });
 
-  // Load initial messages for the channel
   useEffect(() => {
     if (!channelId) return;
-
     // TODO: Replace with API call to GET /channels/:channelId/messages
     const channelMessages = mockMessages.filter((m) => m.channelId === channelId);
     setMessages(channelMessages);
@@ -38,12 +37,8 @@ export default function ChannelPage() {
 
   const handleSendMessage = (content: string) => {
     if (!channelId) return;
-
-    // Try to send via WebSocket
     const sent = send(channelId, content);
-
     if (!sent) {
-      // Fallback: create local message if WebSocket not connected
       // TODO: Replace with API call to POST /channels/:channelId/messages
       const newMessage: Message = {
         id: String(Date.now()),
@@ -53,14 +48,35 @@ export default function ChannelPage() {
         createdAt: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, newMessage]);
-      console.log("Message sent locally (WebSocket not ready):", content);
     }
+  };
+
+  const handleEditMessage = (messageId: string, newContent: string) => {
+    // TODO: Replace with API call to PATCH /messages/:messageId
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === messageId
+          ? { ...m, content: newContent, editedAt: new Date().toISOString() }
+          : m
+      )
+    );
+  };
+
+  const handleDeleteMessage = (messageId: string) => {
+    // TODO: Replace with API call to DELETE /messages/:messageId
+    setMessages((prev) => prev.filter((m) => m.id !== messageId));
   };
 
   if (!guild || !channel) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-bg-primary">
-        <p className="text-text-primary">Channel not found</p>
+      <div className="empty-state">
+        <div style={{ fontSize: 52, opacity: 0.2 }}>💬</div>
+        <span style={{
+          fontFamily: "var(--font-display, 'Rajdhani', sans-serif)",
+          fontSize: 20, fontWeight: 700, color: "var(--text-secondary)",
+        }}>
+          Channel not found
+        </span>
       </div>
     );
   }
@@ -68,30 +84,61 @@ export default function ChannelPage() {
   const channelIcon = channel.type === "VOICE" ? "🎤" : "💬";
 
   return (
-    <div className="flex-1 flex flex-col bg-bg-primary">
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
       {/* Header */}
-      <div className="h-20 border-b border-border flex items-center px-6 bg-bg-secondary">
-        <div className="flex items-center gap-4 flex-1">
-          <span className="text-3xl">{channelIcon}</span>
-          <div>
-            <h1 className="text-lg font-bold text-text-primary">{channel.name}</h1>
-            <p className="text-sm text-text-muted">
-              {channel.type === "VOICE" ? "Voice Channel" : channel.subType || "Text Channel"}
-            </p>
+      <div style={{
+        height: 52, minHeight: 52,
+        borderBottom: "1px solid var(--border)",
+        display: "flex", alignItems: "center",
+        padding: "0 20px", gap: 12,
+        background: "var(--bg-primary)",
+        flexShrink: 0,
+      }}>
+        <span style={{ fontSize: 18 }}>{channelIcon}</span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            fontFamily: "var(--font-display, 'Rajdhani', sans-serif)",
+            fontSize: 17, fontWeight: 700,
+            color: "var(--text-primary)", letterSpacing: "0.3px",
+          }}>
+            #{channel.name}
+          </div>
+          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
+            {channel.type === "VOICE" ? "Voice Channel" : channel.subType || "Text Channel"}
           </div>
         </div>
-        {isConnected && <span className="text-xs text-green-500">● Live</span>}
+        {isConnected && (
+          <span style={{
+            fontSize: 11, fontWeight: 500,
+            color: "var(--success)",
+            background: "rgba(61,220,151,0.1)",
+            padding: "3px 10px", borderRadius: 99,
+          }}>
+            ● Live
+          </span>
+        )}
       </div>
 
-      {/* Messages */}
-      <MessageList messages={messages} isLoading={!isConnected && !messages.length} />
+      {/* Content area */}
+      <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+        {/* Chat */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <MessageList
+            messages={messages}
+            currentUserId={mockUser.id}
+            onEdit={handleEditMessage}
+            onDelete={handleDeleteMessage}
+          />
+          <MessageInput
+            channelName={channel.name}
+            isDisabled={channel.type === "VOICE"}
+            onSend={handleSendMessage}
+          />
+        </div>
 
-      {/* Input Area */}
-      <MessageInput
-        channelName={channel.name}
-        isDisabled={channel.type === "VOICE"}
-        onSend={handleSendMessage}
-      />
+        {/* Member list */}
+        {channel.type === "TEXT" && guild && <MemberList members={guild.members} />}
+      </div>
     </div>
   );
 }
