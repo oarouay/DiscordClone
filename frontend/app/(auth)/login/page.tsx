@@ -32,7 +32,9 @@ export default function LoginPage() {
     try {
       const data = await api.post<LoginResponse>("/auth/login", { email, password });
       login(data.token, data.user);
-      router.replace("/channels/me");
+      setTimeout(() => {
+        router.push("/channels/me");
+      }, 100);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {

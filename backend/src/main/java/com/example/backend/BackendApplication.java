@@ -10,11 +10,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class BackendApplication {
 
     public static void main(String[] args) {
-
         SpringApplication.run(BackendApplication.class, args);
     }
-    @GetMapping
-    public String helloWorld(){
-        return "Hello Ghizen";
+
+    @GetMapping("/api/health")
+    public String health() {
+        return "{\"status\": \"UP\"}";
     }
 }
+

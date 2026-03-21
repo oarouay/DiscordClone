@@ -31,33 +31,3 @@ build/
 
 ### VS Code ###
 .vscode/
-
-### Environment & Configuration ###
-*.env
-*.env.local
-*.env.*.local
-application-dev.yaml
-application-local.yaml
-application.yaml
-
-### Sensitive Files ###
-*.key
-*.pem
-*.jks
-*.p12
-*.keystore
-
-### Logs ###
-*.log
-logs/
-
-### OS ###
-.DS_Store
-Thumbs.db
-*.swp
-*.swo
-*~
-
-### IDE ###
-*.sublime-project
-*.sublime-workspace

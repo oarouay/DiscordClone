@@ -5,7 +5,7 @@ spring:
     url: jdbc:postgresql://localhost:5432/discord_clone
     driver-class-name: org.postgresql.Driver
     username: postgres
-    password: naughtyjocker  # CHANGE THIS to your actual PostgreSQL password!
+    password: YOUR_POSTGRES_PASSWORD_HERE  # Replace with your actual password
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
@@ -17,5 +17,5 @@ server:
 
 app:
   jwt:
-    secret: your-secret-key-change-this-in-production-to-a-more-secure-value
+    secret: your-secure-random-key-change-this-in-production
     expiration: 86400000
