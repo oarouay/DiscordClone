@@ -28,6 +28,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (!stored || isTokenExpired(stored)) {
       clearToken();
+      // TODO: remove mockUser fallback when backend is ready
+      setUser(mockUser);
       setIsLoading(false);
       return;
     }
@@ -38,8 +40,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .get<User>("/users/me")
       .then((me) => setUser(me))
       .catch(() => {
-        // Fallback for demo/testing
-        setUser(null);
+        // TODO: replace with proper error handling when backend is ready
+        setUser(mockUser);
       })
       .finally(() => setIsLoading(false));
   }, []);

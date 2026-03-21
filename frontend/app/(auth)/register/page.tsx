@@ -39,9 +39,7 @@ export default function RegisterPage() {
         password,
       });
       login(data.token, data.user);
-      setTimeout(() => {
-        router.push("/channels/me");
-      }, 100);
+      router.replace("/channels/me");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
