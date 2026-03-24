@@ -1,0 +1,25 @@
+package com.example.backend.auth.security;
+
+import com.example.backend.common.exception.UnauthorizedException;
+import com.example.backend.user.repository.UserRepository;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.stereotype.Service;
+
+@Service
+public class AppUserDetailsService implements UserDetailsService {
+
+    private final UserRepository userRepository;
+
+    public AppUserDetailsService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String email) {
+        return userRepository.findByEmail(email)
+                .map(AppUserPrincipal::new)
+                .orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
+    }
+}
+
