@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Edit2, Trash2, Check, X } from "lucide-react";
 import type { Message } from "@/types";
 import { Avatar } from "@/components/shared/Avatar";
+import { MessageAttachments } from "./MessageAttachments";
 
 interface MessageItemProps {
   message: Message;
@@ -33,13 +34,11 @@ export default function MessageItem({ message, currentUserId, onEdit, onDelete }
   const timestamp = new Date(message.createdAt);
   const timeAgo = formatTimeAgo(timestamp);
 
-  // Focus + resize textarea when entering edit mode
   useEffect(() => {
     if (editing && editRef.current) {
       editRef.current.focus();
       editRef.current.style.height = "auto";
       editRef.current.style.height = editRef.current.scrollHeight + "px";
-      // Move cursor to end
       const len = editRef.current.value.length;
       editRef.current.setSelectionRange(len, len);
     }
@@ -78,12 +77,10 @@ export default function MessageItem({ message, currentUserId, onEdit, onDelete }
       role="article"
       aria-label={`Message from ${message.author.displayName} at ${timeAgo}`}
     >
-      {/* Avatar */}
       <div style={{ paddingTop: 2, flexShrink: 0, display: "flex" }}>
         <Avatar user={message.author} size="lg" />
       </div>
 
-      {/* Body */}
       <div style={{ flex: 1, minWidth: 0, paddingTop: 2, display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 3 }}>
           <span style={{ fontSize: 15, fontWeight: 600, color: "var(--text-primary)", lineHeight: 1 }}>
@@ -94,7 +91,6 @@ export default function MessageItem({ message, currentUserId, onEdit, onDelete }
           </span>
         </div>
 
-        {/* Content or edit textarea */}
         {editing ? (
           <div>
             <textarea
@@ -113,18 +109,18 @@ export default function MessageItem({ message, currentUserId, onEdit, onDelete }
               <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
                 esc to cancel · enter to save
               </span>
-              <button 
+              <button
                 className="msg-action-btn"
-                onClick={cancelEdit} 
+                onClick={cancelEdit}
                 aria-label="Cancel edit"
                 style={{ color: "var(--text-muted)", display: "flex", alignItems: "center", justifyContent: "center", padding: "4px", border: "none", background: "transparent", cursor: "pointer" }}
                 title="Cancel (Esc)"
               >
                 <X size={16} />
               </button>
-              <button 
+              <button
                 className="msg-action-btn"
-                onClick={submitEdit} 
+                onClick={submitEdit}
                 aria-label="Save edit"
                 style={{ color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", padding: "4px", border: "none", background: "transparent", cursor: "pointer" }}
                 title="Save (Enter)"
@@ -134,9 +130,14 @@ export default function MessageItem({ message, currentUserId, onEdit, onDelete }
             </div>
           </div>
         ) : (
-          <p style={{ fontSize: 15, color: "var(--text-secondary)", lineHeight: 1.55, wordBreak: "break-word", whiteSpace: "pre-wrap", margin: 0 }}>
-            {message.content}
-          </p>
+          <>
+            <p style={{ fontSize: 15, color: "var(--text-secondary)", lineHeight: 1.55, wordBreak: "break-word", whiteSpace: "pre-wrap", margin: 0 }}>
+              {message.content}
+            </p>
+            {message.attachments && message.attachments.length > 0 && (
+              <MessageAttachments attachments={message.attachments} />
+            )}
+          </>
         )}
 
         {message.editedAt && !editing && (
@@ -146,7 +147,6 @@ export default function MessageItem({ message, currentUserId, onEdit, onDelete }
         )}
       </div>
 
-      {/* Action buttons — only for own messages, only on hover */}
       {isOwn && hovered && !editing && (
         <div
           className="msg-actions"

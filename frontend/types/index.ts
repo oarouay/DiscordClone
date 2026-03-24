@@ -1,3 +1,11 @@
+  export type Attachment = {
+  id: string;
+  filename: string;
+  size: number;
+  mimeType: string;
+  url: string;
+};
+
 export type User = {
   id: string;
   username: string;
@@ -23,7 +31,7 @@ export type Channel = {
   guildId: string;
   name: string;
   type: "TEXT" | "VOICE";
-  category?: string; // "Rooms" or "Calls"
+  category?: string;
   subType?: "ANNOUNCEMENTS" | "FORUMS" | "DEFAULT";
   position: number;
 };
@@ -35,6 +43,7 @@ export type Message = {
   content: string;
   createdAt: string;
   editedAt?: string;
+  attachments?: Attachment[];
   metadata?: Record<string, unknown>;
 };
 

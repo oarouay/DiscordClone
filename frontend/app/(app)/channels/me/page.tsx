@@ -42,24 +42,28 @@ export default function DirectMessagesPage() {
     setMessages(userMessages);
   }, [selectedUserId, dmChannelId]);
 
-  const handleSendMessage = (content: string) => {
-    if (!selectedUserId || !dmChannelId) return;
-
-    const sent = send(dmChannelId, content);
-
-    if (!sent) {
-      // TODO: Replace with API call to POST /dms/:userId/messages
-      const newMessage: Message = {
-        id: String(Date.now()),
-        channelId: dmChannelId,
-        author: mockUser,
-        content,
-        createdAt: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, newMessage]);
-      console.log("Message sent locally (WebSocket not ready):", content);
-    }
-  };
+  const handleSendMessage = (content: string, files: File[]) => {
+  if (!selectedUserId || !dmChannelId) return;
+  const sent = send(dmChannelId, content);
+  if (!sent) {
+    // TODO: replace with API call to POST /dms/:userId/messages with multipart/form-data
+    const newMessage: Message = {
+      id: String(Date.now()),
+      channelId: dmChannelId,
+      author: mockUser,
+      content,
+      createdAt: new Date().toISOString(),
+      attachments: files.map((file, i) => ({
+        id: `${Date.now()}-${i}`,
+        filename: file.name,
+        size: file.size,
+        mimeType: file.type,
+        url: URL.createObjectURL(file),
+      })),
+    };
+    setMessages((prev) => [...prev, newMessage]);
+  }
+};
 
   const handleEditMessage = (messageId: string, newContent: string) => {
     // TODO: Replace with API call to PATCH /messages/:messageId

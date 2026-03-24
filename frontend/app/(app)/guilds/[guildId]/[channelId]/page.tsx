@@ -37,21 +37,28 @@ export default function ChannelPage() {
     setMessages(channelMessages);
   }, [channelId]);
 
-  const handleSendMessage = (content: string) => {
-    if (!channelId) return;
-    const sent = send(channelId, content);
-    if (!sent) {
-      // TODO: Replace with API call to POST /channels/:channelId/messages
-      const newMessage: Message = {
-        id: String(Date.now()),
-        channelId,
-        author: mockUser,
-        content,
-        createdAt: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, newMessage]);
-    }
-  };
+  const handleSendMessage = (content: string, files: File[]) => {
+  if (!channelId) return;
+  const sent = send(channelId, content);
+  if (!sent) {
+    // TODO: replace with API call to POST /channels/:channelId/messages with multipart/form-data
+    const newMessage: Message = {
+      id: String(Date.now()),
+      channelId,
+      author: mockUser,
+      content,
+      createdAt: new Date().toISOString(),
+      attachments: files.map((file, i) => ({
+        id: `${Date.now()}-${i}`,
+        filename: file.name,
+        size: file.size,
+        mimeType: file.type,
+        url: URL.createObjectURL(file),
+      })),
+    };
+    setMessages((prev) => [...prev, newMessage]);
+  }
+};
 
   const handleEditMessage = (messageId: string, newContent: string) => {
     // TODO: Replace with API call to PATCH /messages/:messageId
