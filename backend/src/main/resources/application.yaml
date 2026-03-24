@@ -1,3 +1,20 @@
 spring:
   application:
     name: backend
+  datasource:
+    url: jdbc:h2:mem:discordclone;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+  h2:
+    console:
+      enabled: true
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:change-me-in-production-change-me-in-production}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
