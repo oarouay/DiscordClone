@@ -28,13 +28,22 @@ The `user` payload includes:
 
 Default settings in `src/main/resources/application.yaml`:
 
-- H2 in-memory DB
+- Neon PostgreSQL DB
 - JWT secret from `JWT_SECRET` env var (or safe local default)
 - JWT expiration from `JWT_EXPIRATION_MS` (default 86400000 ms)
+
+Database env vars:
+
+- `DATABASE_URL` (JDBC URL)
+- `DATABASE_USERNAME`
+- `DATABASE_PASSWORD`
 
 ## Run
 
 ```powershell
+ $env:DATABASE_URL="jdbc:postgresql://ep-royal-frost-an0bni8o-pooler.c-6.us-east-1.aws.neon.tech:5432/neondb?sslmode=require&channelBinding=require"
+ $env:DATABASE_USERNAME="neondb_owner"
+ $env:DATABASE_PASSWORD="<your-neon-password>"
 ./mvnw.cmd spring-boot:run
 ```
 
