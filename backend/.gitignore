@@ -12,7 +12,7 @@ target/
 .settings
 .springBeans
 .sts4-cache
-
+.qodo
 ### IntelliJ IDEA ###
 .idea
 *.iws
@@ -31,3 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Local env ###
+.env
+.env.*
+!.env.example
+
