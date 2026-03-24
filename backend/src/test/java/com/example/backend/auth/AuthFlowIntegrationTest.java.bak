@@ -1,0 +1,146 @@
+package com.example.backend.auth;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+class AuthFlowIntegrationTest {
+
+    @Autowired
+    private TestRestTemplate restTemplate;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Test
+    void registerReturnsTokenAndUser() throws Exception {
+        String requestBody = """
+                {
+                  "username":"john_auth_1",
+                  "displayName":"John Doe",
+                  "email":"john_auth_1@example.com",
+                  "password":"password123"
+                }
+                """;
+
+        ResponseEntity<String> response = restTemplate.postForEntity(
+                "/api/auth/register",
+                new HttpEntity<>(requestBody, createJsonHeaders()),
+                String.class
+        );
+
+        assert response.getStatusCode() == HttpStatus.CREATED;
+        JsonNode root = objectMapper.readTree(response.getBody());
+        assert root.path("token").isTextual();
+        assert root.path("user").path("id").asText().startsWith("u_");
+        assert root.path("user").path("username").asText().equals("john_auth_1");
+        assert root.path("user").path("status").asText().equals("online");
+    }
+
+    @Test
+    void loginAndMeFlowWorksWithBearerToken() throws Exception {
+        String registerBody = """
+                {
+                  "username":"john_auth_2",
+                  "displayName":"John Two",
+                  "email":"john_auth_2@example.com",
+                  "password":"password123"
+                }
+                """;
+
+        ResponseEntity<String> registerResponse = restTemplate.postForEntity(
+                "/api/auth/register",
+                new HttpEntity<>(registerBody, createJsonHeaders()),
+                String.class
+        );
+        assert registerResponse.getStatusCode() == HttpStatus.CREATED;
+
+        String loginBody = """
+                {
+                  "email":"john_auth_2@example.com",
+                  "password":"password123"
+                }
+                """;
+
+        ResponseEntity<String> loginResponse = restTemplate.postForEntity(
+                "/api/auth/login",
+                new HttpEntity<>(loginBody, createJsonHeaders()),
+                String.class
+        );
+
+        assert loginResponse.getStatusCode() == HttpStatus.OK;
+        JsonNode loginRoot = objectMapper.readTree(loginResponse.getBody());
+        String token = loginRoot.path("token").asText();
+        assert !token.isEmpty();
+
+        HttpHeaders meHeaders = createJsonHeaders();
+        meHeaders.set("Authorization", "Bearer " + token);
+
+        ResponseEntity<String> meResponse = restTemplate.getForEntity(
+                "/api/users/me",
+                String.class
+        );
+        assert meResponse.getStatusCode() == HttpStatus.OK;
+        JsonNode meRoot = objectMapper.readTree(meResponse.getBody());
+        assert meRoot.path("email").asText().equals("john_auth_2@example.com");
+        assert meRoot.path("status").asText().equals("online");
+    }
+
+    @Test
+    void registerDuplicateEmailReturnsConflict() throws Exception {
+        String first = """
+                {
+                  "username":"john_auth_3",
+                  "displayName":"John Three",
+                  "email":"john_auth_3@example.com",
+                  "password":"password123"
+                }
+                """;
+
+        String second = """
+                {
+                  "username":"john_auth_4",
+                  "displayName":"John Four",
+                  "email":"john_auth_3@example.com",
+                  "password":"password123"
+                }
+                """;
+
+        ResponseEntity<String> firstResponse = restTemplate.postForEntity(
+                "/api/auth/register",
+                new HttpEntity<>(first, createJsonHeaders()),
+                String.class
+        );
+        assert firstResponse.getStatusCode() == HttpStatus.CREATED;
+
+        ResponseEntity<String> secondResponse = restTemplate.postForEntity(
+                "/api/auth/register",
+                new HttpEntity<>(second, createJsonHeaders()),
+                String.class
+        );
+        assert secondResponse.getStatusCode() == HttpStatus.CONFLICT;
+        JsonNode conflictRoot = objectMapper.readTree(secondResponse.getBody());
+        assert conflictRoot.path("message").asText().equals("Email already exists");
+    }
+
+    private HttpHeaders createJsonHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return headers;
+    }
+}
+
