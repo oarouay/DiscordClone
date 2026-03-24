@@ -2,17 +2,14 @@ spring:
   application:
     name: backend
   datasource:
-    url: jdbc:h2:mem:discordclone;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    url: ${DATABASE_URL:jdbc:postgresql://ep-royal-frost-an0bni8o-pooler.c-6.us-east-1.aws.neon.tech:5432/neondb?sslmode=require&channelBinding=require}
+    driver-class-name: org.postgresql.Driver
+    username: ${DATABASE_USERNAME:neondb_owner}
+    password: ${DATABASE_PASSWORD:npg_iEFlw98WPYyz}
   jpa:
     hibernate:
       ddl-auto: update
     open-in-view: false
-  h2:
-    console:
-      enabled: true
 
 app:
   jwt:
