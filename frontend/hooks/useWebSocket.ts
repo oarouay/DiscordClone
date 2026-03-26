@@ -4,7 +4,7 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import type { Message } from "@/types";
 
 interface WebSocketMessage {
-  type: "message" | "presence" | "typing" | "error";
+  type: "auth" | "message" | "presence" | "typing" | "error";
   payload: unknown;
 }
 
@@ -16,17 +16,59 @@ interface UseWebSocketOptions {
 }
 
 export function useWebSocket(options: UseWebSocketOptions = {}) {
+  const resolveDefaultUrl = () => {
+    if (process.env.NEXT_PUBLIC_WS_URL) {
+      return process.env.NEXT_PUBLIC_WS_URL;
+    }
+
+    if (process.env.NEXT_PUBLIC_API_URL) {
+      try {
+        const api = new URL(process.env.NEXT_PUBLIC_API_URL);
+        api.protocol = api.protocol === "https:" ? "wss:" : "ws:";
+        api.pathname = api.pathname.replace(/\/?api\/?$/, "") + "/ws";
+        return api.toString();
+      } catch {
+        // Fallback handled below.
+      }
+    }
+
+    if (typeof window !== "undefined") {
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      return `${protocol}//${window.location.host}/ws`;
+    }
+
+    return "ws://localhost:8081/ws";
+  };
+
   const {
-    url = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080/ws",
+    url = resolveDefaultUrl(),
     onMessage,
     onPresence,
     onError,
   } = options;
 
   const wsRef = useRef<WebSocket | null>(null);
+  const onMessageRef = useRef<UseWebSocketOptions["onMessage"]>(onMessage);
+  const onPresenceRef = useRef<UseWebSocketOptions["onPresence"]>(onPresence);
+  const onErrorRef = useRef<UseWebSocketOptions["onError"]>(onError);
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const shouldReconnectRef = useRef(true);
+  const connectRef = useRef<() => void>(() => {});
+  const isSocketAuthenticatedRef = useRef(false);
+
+  useEffect(() => {
+    onMessageRef.current = onMessage;
+  }, [onMessage]);
+
+  useEffect(() => {
+    onPresenceRef.current = onPresence;
+  }, [onPresence]);
+
+  useEffect(() => {
+    onErrorRef.current = onError;
+  }, [onError]);
 
   // Get auth token from localStorage
   const getToken = useCallback(() => {
@@ -36,15 +78,18 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
 
   // Connect to WebSocket
   const connect = useCallback(() => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
+    if (
+      wsRef.current?.readyState === WebSocket.OPEN ||
+      wsRef.current?.readyState === WebSocket.CONNECTING
+    ) {
       return;
     }
 
     setIsConnecting(true);
 
     try {
-      const token = getToken();
       const wsUrl = new URL(url);
+      const token = getToken();
       
       // For development, allow non-secure WS
       if (typeof window !== "undefined" && window.location.protocol === "https:") {
@@ -54,7 +99,8 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       const ws = new WebSocket(wsUrl.toString());
 
       ws.onopen = () => {
-        console.log("[WebSocket] Connected");
+        console.info("[WebSocket] Connected", wsUrl.toString());
+        isSocketAuthenticatedRef.current = false;
         setIsConnected(true);
         setIsConnecting(false);
 
@@ -72,11 +118,19 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       ws.onmessage = (event) => {
         try {
           const wsMsg = JSON.parse(event.data) as WebSocketMessage;
+          console.info("[WebSocket] Received message:", wsMsg);
 
-          if (wsMsg.type === "message" && onMessage) {
-            onMessage(wsMsg.payload as Message);
-          } else if (wsMsg.type === "presence" && onPresence) {
-            onPresence(wsMsg.payload as { userId: string; status: "online" | "idle" | "offline" });
+          if (wsMsg.type === "auth") {
+            const authPayload = wsMsg.payload as { success?: boolean };
+            isSocketAuthenticatedRef.current = authPayload?.success === true;
+            if (!isSocketAuthenticatedRef.current) {
+              console.warn("[WebSocket] Authentication failed");
+            }
+          } else if (wsMsg.type === "message" && onMessageRef.current) {
+            console.info("[WebSocket] Triggering onMessage with payload:", wsMsg.payload);
+            onMessageRef.current(wsMsg.payload as Message);
+          } else if (wsMsg.type === "presence" && onPresenceRef.current) {
+            onPresenceRef.current(wsMsg.payload as { userId: string; status: "online" | "idle" | "offline" });
           }
         } catch (error) {
           console.error("[WebSocket] Failed to parse message:", error);
@@ -84,20 +138,28 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       };
 
       ws.onerror = (event) => {
-        console.error("[WebSocket] Error:", event);
-        const error = new Error("WebSocket error occurred");
-        if (onError) onError(error);
+        const error = new Error(`WebSocket error on ${wsUrl.toString()} (readyState=${ws.readyState})`);
+        console.error("[WebSocket] Error:", {
+          url: wsUrl.toString(),
+          readyState: ws.readyState,
+          eventType: event.type,
+        });
+        if (onErrorRef.current) onErrorRef.current(error);
       };
 
       ws.onclose = () => {
-        console.log("[WebSocket] Disconnected");
+        console.warn("[WebSocket] Disconnected");
+        isSocketAuthenticatedRef.current = false;
         setIsConnected(false);
         setIsConnecting(false);
 
-        // Attempt to reconnect after 3 seconds
+        if (!shouldReconnectRef.current) {
+          return;
+        }
+
         reconnectTimeoutRef.current = setTimeout(() => {
-          console.log("[WebSocket] Attempting to reconnect...");
-          connect();
+          console.info("[WebSocket] Attempting to reconnect...");
+          connectRef.current();
         }, 3000);
       };
 
@@ -105,10 +167,14 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     } catch (error) {
       console.error("[WebSocket] Connection failed:", error);
       const err = error instanceof Error ? error : new Error("Unknown error");
-      if (onError) onError(err);
+      if (onErrorRef.current) onErrorRef.current(err);
       setIsConnecting(false);
     }
-  }, [url, getToken, onMessage, onPresence, onError]);
+  }, [url, getToken]);
+
+  useEffect(() => {
+    connectRef.current = connect;
+  }, [connect]);
 
   // Subscribe to a topic
   const subscribe = useCallback((topic: string) => {
@@ -125,11 +191,28 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     );
   }, []);
 
+  const authenticate = useCallback((token: string) => {
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+      return;
+    }
+    wsRef.current.send(
+      JSON.stringify({
+        type: "auth",
+        token,
+      })
+    );
+  }, []);
+
   // Send a message
   const send = useCallback(
     (channelId: string, content: string) => {
       if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
         console.warn("[WebSocket] Not connected, cannot send message");
+        return false;
+      }
+
+      if (!isSocketAuthenticatedRef.current) {
+        console.warn("[WebSocket] Not authenticated yet, falling back to REST send");
         return false;
       }
 
@@ -149,6 +232,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      shouldReconnectRef.current = false;
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
       }
@@ -160,8 +244,12 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
 
   // Start connection on first load
   useEffect(() => {
-    connect();
-  }, []);
+    const timeout = setTimeout(() => {
+      connect();
+    }, 0);
+
+    return () => clearTimeout(timeout);
+  }, [connect]);
 
   return {
     isConnected,
@@ -169,5 +257,6 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     connect,
     subscribe,
     send,
+    authenticate,
   };
 }

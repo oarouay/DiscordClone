@@ -17,3 +17,5 @@ app:
   jwt:
     secret: ${JWT_SECRET:change-me-in-production-change-me-in-production}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+  dm-encryption:
+    key: ${DM_ENCRYPTION_KEY:change-me-32-bytes-key-change-me}

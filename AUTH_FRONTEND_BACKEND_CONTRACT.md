@@ -9,7 +9,8 @@ This document describes exactly what the current frontend expects from the backe
 ## Base API URL
 The frontend calls:
 - `process.env.NEXT_PUBLIC_API_URL`
-- fallback: `http://localhost:8080/api`
+- local default (current team setup): `http://localhost:8081/api`
+- optional fallback: `http://localhost:8080/api`
 
 So all endpoints below are expected under `/api`.
 

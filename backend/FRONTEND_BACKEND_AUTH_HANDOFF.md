@@ -2,7 +2,7 @@
 
 Date: 2026-03-24
 Project: DiscordClone
-Backend base URL: `http://localhost:8080/api` (or your deployed API URL)
+Backend base URL: `http://localhost:8081/api` (local default, or your deployed API URL)
 
 ## Checklist
 - [x] Auth endpoints are implemented
@@ -144,15 +144,15 @@ The following flows were manually verified:
 ## Quick Curl Samples
 
 ```bash
-curl -X POST http://localhost:8080/api/auth/register \
+curl -X POST http://localhost:8081/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{"username":"john","displayName":"John Doe","email":"user@example.com","password":"password123"}'
 
-curl -X POST http://localhost:8080/api/auth/login \
+curl -X POST http://localhost:8081/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"user@example.com","password":"password123"}'
 
-curl http://localhost:8080/api/users/me \
+curl http://localhost:8081/api/users/me \
   -H "Authorization: Bearer <jwt>"
 ```
 

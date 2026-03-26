@@ -37,6 +37,7 @@ Database env vars:
 - `DATABASE_URL` (JDBC URL)
 - `DATABASE_USERNAME`
 - `DATABASE_PASSWORD`
+- `DM_ENCRYPTION_KEY` (at least 32 chars, used to encrypt DM content at rest)
 
 ## Run
 
@@ -44,7 +45,15 @@ Database env vars:
  $env:DATABASE_URL="jdbc:postgresql://ep-royal-frost-an0bni8o-pooler.c-6.us-east-1.aws.neon.tech:5432/neondb?sslmode=require&channelBinding=require"
  $env:DATABASE_USERNAME="neondb_owner"
  $env:DATABASE_PASSWORD="<your-neon-password>"
-./mvnw.cmd spring-boot:run
+ $env:DM_ENCRYPTION_KEY="replace-with-your-32-char-minimum-key"
+./mvnw.cmd spring-boot:run "-Dspring-boot.run.arguments=--server.port=8081"
+```
+
+If `8080` is occupied on your machine, keep backend on `8081` and point frontend to:
+
+```powershell
+$env:NEXT_PUBLIC_API_URL="http://localhost:8081/api"
+npm --prefix D:\DiscordClone\frontend run dev
 ```
 
 ## Test

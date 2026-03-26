@@ -2,9 +2,8 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { MessageCircle } from "lucide-react";
-import { mockDMConversations, mockDMMessages, mockUser } from "@/lib/mock";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { useAuth } from "@/context/AuthContext";
 import { DMSidebar } from "@/components/dm/DMSidebar";
@@ -13,57 +12,154 @@ import { VoiceControls } from "@/components/voice/VoiceControls";
 import MessageList from "@/components/chat/MessageList";
 import MessageInput from "@/components/chat/MessageInput";
 import type { Message } from "@/types";
+import { dmApi } from "@/lib/dms";
+import { friendsApi, type FriendRequestResponse } from "@/lib/friends";
+import { FriendsPanel } from "@/components/dm/FriendsPanel";
+import type { User } from "@/types";
 
 const MOCK_RICH_PRESENCE = { activity: "Playing Elden Ring", detail: "Exploring Limgrave • 2h 14m" };
 
 export default function DirectMessagesPage() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [selectedUserId, setSelectedUserId] = useState<string>();
   const [messages, setMessages] = useState<Message[]>([]);
+  const [conversations, setConversations] = useState<User[]>([]);
+  const [incomingRequests, setIncomingRequests] = useState<FriendRequestResponse[]>([]);
+  const [outgoingRequests, setOutgoingRequests] = useState<FriendRequestResponse[]>([]);
+  const [searchValue, setSearchValue] = useState("");
+  const [searchResults, setSearchResults] = useState<User[]>([]);
+  const [isRefreshingSocial, setIsRefreshingSocial] = useState(false);
   const [voiceChannel, setVoiceChannel] = useState<{ channelName: string; guildName: string } | null>(null);
   const [isMuted, setIsMuted] = useState(false);
   const [isDeafened, setIsDeafened] = useState(false);
 
-  const selectedUser = mockDMConversations.find((u) => u.id === selectedUserId);
+  const selectedUser = conversations.find((u) => u.id === selectedUserId);
   const dmChannelId = selectedUserId ? `dm_${selectedUserId}` : "";
 
-  const { isConnected, send } = useWebSocket({
+  const { isConnected, send, authenticate } = useWebSocket({
     onMessage: (message: Message) => {
       if (message.channelId === dmChannelId) {
-        setMessages((prev) => [...prev, message]);
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === message.id)) return prev;
+          return [...prev, message];
+        });
+      } else {
+        // If we receive a message for a channel not currently selected,
+        // we could optionally play a sound or show a notification.
+        // For now, if they are not in the conversation list, trigger a refresh:
+        const incomingUserId = message.channelId.replace("dm_", "");
+        if (incomingUserId && !conversations.some(c => c.id === incomingUserId)) {
+          refreshSocialData().catch(() => {});
+        }
       }
     },
   });
 
   useEffect(() => {
+    if (isConnected && token) {
+      authenticate(token);
+    }
+  }, [isConnected, token, authenticate]);
+
+  const refreshSocialData = useCallback(async () => {
+    setIsRefreshingSocial(true);
+    try {
+      const [conversationResponse, incoming, outgoing] = await Promise.all([
+        dmApi.listConversations(),
+        friendsApi.listIncomingRequests(),
+        friendsApi.listOutgoingRequests(),
+      ]);
+
+      setConversations(conversationResponse.map((item) => item.user));
+      setIncomingRequests(incoming);
+      setOutgoingRequests(outgoing);
+      if (!selectedUserId && conversationResponse.length > 0) {
+        setSelectedUserId(conversationResponse[0].user.id);
+      }
+    } finally {
+      setIsRefreshingSocial(false);
+    }
+  }, [selectedUserId]);
+
+  useEffect(() => {
+    if (!user) return;
+    refreshSocialData().catch(() => {
+      setConversations([]);
+      setIncomingRequests([]);
+      setOutgoingRequests([]);
+    });
+  }, [user, refreshSocialData]);
+
+  useEffect(() => {
     if (!selectedUserId) return;
-    // TODO: Replace with API call to GET /dms/:userId/messages
-    const userMessages = mockDMMessages.filter((m) => m.channelId === dmChannelId);
-    setMessages(userMessages);
+    dmApi.getMessages(selectedUserId)
+      .then((history) => setMessages(history))
+      .catch(() => setMessages([]));
   }, [selectedUserId, dmChannelId]);
 
-  const handleSendMessage = (content: string, files: File[]) => {
-  if (!selectedUserId || !dmChannelId) return;
-  const sent = send(dmChannelId, content);
-  if (!sent) {
-    // TODO: replace with API call to POST /dms/:userId/messages with multipart/form-data
-    const newMessage: Message = {
-      id: String(Date.now()),
-      channelId: dmChannelId,
-      author: mockUser,
-      content,
-      createdAt: new Date().toISOString(),
-      attachments: files.map((file, i) => ({
-        id: `${Date.now()}-${i}`,
-        filename: file.name,
-        size: file.size,
-        mimeType: file.type,
-        url: URL.createObjectURL(file),
-      })),
-    };
-    setMessages((prev) => [...prev, newMessage]);
-  }
-};
+  useEffect(() => {
+    const normalized = searchValue.trim();
+    if (normalized.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      friendsApi.searchUsers(normalized)
+        .then((results) => setSearchResults(results))
+        .catch(() => setSearchResults([]));
+    }, 250);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchValue]);
+
+  const handleSendMessage = async (content: string, files: File[]) => {
+    if (!selectedUserId || !dmChannelId || !content.trim()) return;
+
+    // Always do an optimistic update for best UX
+    if (user) {
+      const optimisticMessage: Message = {
+        id: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        channelId: dmChannelId,
+        author: user,
+        content,
+        createdAt: new Date().toISOString(),
+        attachments: files.map((file, i) => ({
+          id: `temp-${Date.now()}-${i}`,
+          filename: file.name,
+          size: file.size,
+          mimeType: file.type,
+          url: URL.createObjectURL(file),
+        })),
+      };
+      setMessages((prev) => [...prev, optimisticMessage]);
+    }
+
+    const sentOverSocket = send(dmChannelId, content);
+    if (!sentOverSocket) {
+      try {
+        await dmApi.sendMessage(selectedUserId, content);
+        // DB handles generating true ID, it will be fetched on next history fetch.
+      } catch {
+        // Keep UI stable; error toasts can be added in a dedicated notification layer.
+      }
+    }
+  };
+
+  const handleSendFriendRequest = async (targetUserId: string) => {
+    await friendsApi.sendRequest(targetUserId);
+    await refreshSocialData();
+  };
+
+  const handleAcceptRequest = async (requestId: string) => {
+    await friendsApi.acceptRequest(requestId);
+    await refreshSocialData();
+  };
+
+  const handleDeclineRequest = async (requestId: string) => {
+    await friendsApi.declineRequest(requestId);
+    await refreshSocialData();
+  };
 
   const handleEditMessage = (messageId: string, newContent: string) => {
     // TODO: Replace with API call to PATCH /messages/:messageId
@@ -85,27 +181,6 @@ export default function DirectMessagesPage() {
     status === "online" ? "var(--success)" : "var(--warning)";
   const statusLabel = (status: string) =>
     status === "online" ? "Online" : "Idle";
-
-  if (mockDMConversations.length === 0) {
-    return (
-      <div className="empty-state">
-        <MessageCircle size={52} style={{ opacity: 0.2 }} />
-        <span
-          style={{
-            fontFamily: "var(--font-display, 'Rajdhani', sans-serif)",
-            fontSize: 20,
-            fontWeight: 700,
-            color: "var(--text-secondary)",
-          }}
-        >
-          No conversations yet
-        </span>
-        <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
-          Start a new direct message to begin chatting.
-        </span>
-      </div>
-    );
-  }
 
   const bottomSlot = user ? (
     <>
@@ -141,10 +216,29 @@ export default function DirectMessagesPage() {
     <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
       {/* DM Sidebar */}
       <DMSidebar
-        conversations={mockDMConversations}
+        conversations={conversations}
         selectedUserId={selectedUserId}
         onSelectUser={setSelectedUserId}
         isConnected={isConnected}
+        topSlot={
+          <FriendsPanel
+            searchValue={searchValue}
+            onSearchValueChange={setSearchValue}
+            searchResults={searchResults}
+            outgoingRequests={outgoingRequests}
+            incomingRequests={incomingRequests}
+            onSendRequest={(targetUserId) => {
+              handleSendFriendRequest(targetUserId).catch(() => {});
+            }}
+            onAcceptRequest={(requestId) => {
+              handleAcceptRequest(requestId).catch(() => {});
+            }}
+            onDeclineRequest={(requestId) => {
+              handleDeclineRequest(requestId).catch(() => {});
+            }}
+            isBusy={isRefreshingSocial}
+          />
+        }
         bottomSlot={bottomSlot}
       />
 
@@ -192,13 +286,30 @@ export default function DirectMessagesPage() {
 
           <MessageList
             messages={messages}
-            currentUserId={mockUser.id}
+            currentUserId={user?.id}
             onEdit={handleEditMessage}
             onDelete={handleDeleteMessage}
           />
           <MessageInput channelName={selectedUser.displayName} onSend={handleSendMessage} />
         </div>
-      ) : null}
+      ) : (
+        <div className="empty-state" style={{ flex: 1 }}>
+          <MessageCircle size={52} style={{ opacity: 0.2 }} />
+          <span
+            style={{
+              fontFamily: "var(--font-display, 'Rajdhani', sans-serif)",
+              fontSize: 20,
+              fontWeight: 700,
+              color: "var(--text-secondary)",
+            }}
+          >
+            No conversations yet
+          </span>
+          <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
+            Send or accept a friend request to start a direct message.
+          </span>
+        </div>
+      )}
     </div>
   );
 }

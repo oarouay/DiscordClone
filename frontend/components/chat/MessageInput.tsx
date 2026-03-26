@@ -178,9 +178,10 @@ export default function MessageInput({ channelName, isDisabled = false, onSend }
       <div
         style={{
           position: "relative",
-          borderColor: isFocused ? "var(--accent)" : "var(--border)",
           background: "var(--bg-hover)",
-          border: "1px solid",
+          borderWidth: "1px",
+          borderStyle: "solid",
+          borderColor: isFocused ? "var(--accent)" : "var(--border)",
           borderRadius: "var(--radius)",
           padding: "10px 14px",
           transition: "border-color 0.15s",

@@ -1,6 +1,6 @@
 import { getToken, clearToken } from "./auth";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8081/api";
 
 type RequestOptions = {
   method?: string;
@@ -20,11 +20,16 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${BASE_URL}${path}`, {
-    method: options.method ?? "GET",
-    headers,
-    body: options.body ? JSON.stringify(options.body) : undefined,
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${BASE_URL}${path}`, {
+      method: options.method ?? "GET",
+      headers,
+      body: options.body ? JSON.stringify(options.body) : undefined,
+    });
+  } catch {
+    throw new Error("Unable to reach backend API. Confirm backend is running and NEXT_PUBLIC_API_URL is correct.");
+  }
 
   if (response.status === 401) {
     clearToken();

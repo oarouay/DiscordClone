@@ -34,6 +34,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(exception.getMessage()));
     }
 
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNotFound(NotFoundException exception) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(exception.getMessage()));
+    }
+
     @ExceptionHandler({UnauthorizedException.class, BadCredentialsException.class})
     public ResponseEntity<ErrorResponse> handleUnauthorized(RuntimeException exception) {
         if (exception instanceof BadCredentialsException) {

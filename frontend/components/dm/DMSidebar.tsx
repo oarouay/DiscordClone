@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import DMList from "./DMList";
 import type { User } from "@/types";
 
@@ -9,12 +8,14 @@ export function DMSidebar({
   selectedUserId,
   onSelectUser,
   isConnected,
+  topSlot,
   bottomSlot,
 }: {
   conversations: User[];
   selectedUserId?: string;
   onSelectUser?: (userId: string) => void;
   isConnected?: boolean;
+  topSlot?: React.ReactNode;
   bottomSlot?: React.ReactNode;
 }) {
   return (
@@ -48,6 +49,7 @@ export function DMSidebar({
           </span>
         )}
       </div>
+      {topSlot}
       <DMList
         conversations={conversations}
         selectedUserId={selectedUserId}
