@@ -3,7 +3,7 @@
 export const dynamic = "force-dynamic";
 
 import { useState, useEffect, useCallback } from "react";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Phone } from "lucide-react";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { useAuth } from "@/context/AuthContext";
 import { DMSidebar } from "@/components/dm/DMSidebar";
@@ -282,10 +282,37 @@ export default function DirectMessagesPage() {
             <span style={{ fontSize: 11, fontWeight: 500, color: statusColor(selectedUser.status), flexShrink: 0 }}>
               {statusLabel(selectedUser.status)}
             </span>
-          </div>
+              <button
+                onClick={() => alert("Voice call integration coming soon: initialize hook here!")}
+                title="Start Voice Call"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: "transparent",
+                  border: "none",
+                  color: "var(--text-muted)",
+                  cursor: "pointer",
+                  padding: "6px",
+                  borderRadius: "50%",
+                  marginLeft: "8px",
+                  transition: "background 0.2s, color 0.2s"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = "var(--success)";
+                  e.currentTarget.style.backgroundColor = "var(--bg-hover)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = "var(--text-muted)";
+                  e.currentTarget.style.backgroundColor = "transparent";
+                }}
+              >
+                <Phone size={18} />
+              </button>
+            </div>
 
-          <MessageList
-            messages={messages}
+            <MessageList
+              messages={messages}
             currentUserId={user?.id}
             onEdit={handleEditMessage}
             onDelete={handleDeleteMessage}
