@@ -5,7 +5,8 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { mockGuilds, mockChannels, mockMembers } from "@/lib/mock";
+import { useGuilds } from "@/hooks/useGuilds";
+import { mockChannels, mockMembers } from "@/lib/mock";
 import { GuildSidebar } from "@/components/guild/GuildSidebar";
 import { ChannelSidebar } from "@/components/channel/ChannelSidebar";
 import { UserPanel } from "@/components/shared/UserPanel";
@@ -16,29 +17,30 @@ const MOCK_RICH_PRESENCE = { activity: "Playing Elden Ring", detail: "Exploring 
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
+  const { guilds: fetchedGuilds, isLoading: isLoadingGuilds } = useGuilds();
   const router = useRouter();
   const pathname = usePathname();
   const [guilds, setGuilds] = useState<Guild[]>([]);
   const [selectedGuildId, setSelectedGuildId] = useState<string>();
-  const [isLoadingGuilds, setIsLoadingGuilds] = useState(true);
   const [voiceChannel, setVoiceChannel] = useState<{ channelName: string; guildName: string } | null>(null);
   const [isMuted, setIsMuted] = useState(false);
   const [isDeafened, setIsDeafened] = useState(false);
 
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoading || isLoadingGuilds) return;
     if (!user) { router.replace("/login"); return; }
-    setGuilds(mockGuilds);
-    if (mockGuilds.length > 0) {
-      const firstGuild = mockGuilds[0];
+    
+    setGuilds(fetchedGuilds);
+    if (fetchedGuilds.length > 0) {
+      const firstGuild = fetchedGuilds[0];
       const firstTextChannel = firstGuild.channels.find((c) => c.type === "TEXT");
       setSelectedGuildId(firstGuild.id);
       if (firstTextChannel) router.push(`/guilds/${firstGuild.id}/${firstTextChannel.id}`);
     }
-    setIsLoadingGuilds(false);
-  }, [user, isLoading, router]);
+  }, [user, isLoading, isLoadingGuilds, fetchedGuilds, router]);
 
   const handleCreateGuild = async (name: string, guildType: "HOUSE" | "CRIB") => {
+    // TODO: Replace with API call to POST /guilds
     const guildId = String(Date.now());
     const newGuild: Guild = {
       id: guildId, name, guildType, isPrivate: guildType === "HOUSE", ownerId: user?.id || "1",
@@ -46,7 +48,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       members: mockMembers.map((m) => ({ ...m, guildId })),
     };
     setGuilds((prev) => [...prev, newGuild]);
-    mockGuilds.push(newGuild);
     setSelectedGuildId(newGuild.id);
   };
 

@@ -3,7 +3,9 @@
 import type { Message } from "@/types";
 import { MessageCircle } from "lucide-react";
 import MessageItem from "./MessageItem";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useMemo } from "react";
+import { computeMessageGrouping } from "@/lib/messageGrouping";
+import { EmptyChannelState } from "./EmptyChannelState";
 
 interface MessageListProps {
   messages: Message[];
@@ -15,6 +17,7 @@ interface MessageListProps {
 
 export default function MessageList({ messages, isLoading = false, currentUserId, onEdit, onDelete }: MessageListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const groupedMessages = useMemo(() => computeMessageGrouping(messages), [messages]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -40,22 +43,10 @@ export default function MessageList({ messages, isLoading = false, currentUserId
 
   if (messages.length === 0) {
     return (
-      <div className="empty-state">
-        <MessageCircle size={52} style={{ opacity: 0.2 }} />
-        <span
-          style={{
-            fontFamily: "var(--font-display, 'Rajdhani', sans-serif)",
-            fontSize: 20,
-            fontWeight: 700,
-            color: "var(--text-secondary)",
-          }}
-        >
-          Start the conversation
-        </span>
-        <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
-          Be the first to send a message.
-        </span>
-      </div>
+      <EmptyChannelState
+        title="Start the conversation"
+        subtitle="Be the first to send a message."
+      />
     );
   }
 
@@ -70,8 +61,15 @@ export default function MessageList({ messages, isLoading = false, currentUserId
         paddingBottom: 4,
       }}
     >
-      {messages.map((message) => (
-        <MessageItem key={message.id} message={message} currentUserId={currentUserId} onEdit={onEdit} onDelete={onDelete} />
+      {groupedMessages.map((message) => (
+        <MessageItem 
+          key={message.id} 
+          message={message} 
+          showHeader={message.showHeader}
+          currentUserId={currentUserId} 
+          onEdit={onEdit} 
+          onDelete={onDelete} 
+        />
       ))}
       <div ref={messagesEndRef} />
     </div>

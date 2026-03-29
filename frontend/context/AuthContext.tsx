@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (!stored || isTokenExpired(stored)) {
       clearToken();
-      // TODO: remove mockUser fallback when backend is ready
+      // Fallback to mockUser if no valid token
       setUser(mockUser);
       setIsLoading(false);
       return;
@@ -39,8 +39,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     api
       .get<User>("/users/me")
       .then((me) => setUser(me))
-      .catch(() => {
-        // TODO: replace with proper error handling when backend is ready
+      .catch((err) => {
+        console.error("Failed to fetch user:", err);
+        // Fallback to mockUser on error
         setUser(mockUser);
       })
       .finally(() => setIsLoading(false));

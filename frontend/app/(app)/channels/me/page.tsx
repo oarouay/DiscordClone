@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback } from "react";
 import { MessageCircle, Phone } from "lucide-react";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { useAuth } from "@/context/AuthContext";
+import { useVoiceCallContext } from "@/context/VoiceCallContext";
 import { DMSidebar } from "@/components/dm/DMSidebar";
 import { UserPanel } from "@/components/shared/UserPanel";
 import { VoiceControls } from "@/components/voice/VoiceControls";
@@ -21,6 +22,7 @@ const MOCK_RICH_PRESENCE = { activity: "Playing Elden Ring", detail: "Exploring 
 
 export default function DirectMessagesPage() {
   const { user, token } = useAuth();
+  const voiceCall = useVoiceCallContext();
   const [selectedUserId, setSelectedUserId] = useState<string>();
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversations, setConversations] = useState<User[]>([]);
@@ -283,7 +285,11 @@ export default function DirectMessagesPage() {
               {statusLabel(selectedUser.status)}
             </span>
               <button
-                onClick={() => alert("Voice call integration coming soon: initialize hook here!")}
+                onClick={() => {
+                  if (selectedUserId && voiceCall.state === "idle") {
+                    voiceCall.initiateCall(selectedUserId).catch(() => {});
+                  }
+                }}
                 title="Start Voice Call"
                 style={{
                   display: "flex",
@@ -292,7 +298,8 @@ export default function DirectMessagesPage() {
                   background: "transparent",
                   border: "none",
                   color: "var(--text-muted)",
-                  cursor: "pointer",
+                  cursor: selectedUserId && voiceCall.state === "idle" ? "pointer" : "not-allowed",
+                  opacity: selectedUserId && voiceCall.state === "idle" ? 1 : 0.5,
                   padding: "6px",
                   borderRadius: "50%",
                   marginLeft: "8px",

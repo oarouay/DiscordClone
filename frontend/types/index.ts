@@ -34,6 +34,13 @@ export type Channel = {
   category?: string;
   subType?: "ANNOUNCEMENTS" | "FORUMS" | "DEFAULT";
   position: number;
+  connectedUsers?: VoiceChannelUser[];
+};
+
+export type VoiceChannelUser = {
+  userId: string;
+  user: User;
+  isMuted?: boolean;
 };
 
 export type Message = {
@@ -74,3 +81,28 @@ export type ApiError = {
   message: string;
   status: number;
 };
+
+/** WebRTC Voice Call Signal Types */
+export type VoiceCallSignal =
+  | { type: "CALL_INITIATE"; callerId: string; callerName?: string }
+  | { type: "CALL_ACCEPT"; peerId: string }
+  | { type: "CALL_DECLINE"; peerId: string }
+  | { type: "CALL_HANGUP"; peerId: string }
+  | { type: "CALL_TIMEOUT"; peerId: string }
+  | {
+      type: "WEBRTC_OFFER";
+      peerId: string;
+      payload: RTCSessionDescriptionInit;
+    }
+  | {
+      type: "WEBRTC_ANSWER";
+      peerId: string;
+      payload: RTCSessionDescriptionInit;
+    }
+  | {
+      type: "WEBRTC_ICE_CANDIDATE";
+      peerId: string;
+      payload: RTCIceCandidateInit;
+    };
+
+export type VoiceCallState = "idle" | "calling" | "ringing" | "connected" | "ended";
