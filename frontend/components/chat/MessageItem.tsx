@@ -6,7 +6,6 @@ import { MessageAttachments } from "./MessageAttachments";
 
 interface MessageItemProps {
   message: Message;
-  showHeader?: boolean;
   currentUserId?: string;
   onEdit?: (messageId: string, newContent: string) => void;
   onDelete?: (messageId: string) => void;
@@ -25,7 +24,7 @@ function formatTimeAgo(date: Date): string {
   return date.toLocaleDateString();
 }
 
-export default function MessageItem({ message, showHeader = true, currentUserId, onEdit, onDelete }: MessageItemProps) {
+export default function MessageItem({ message, currentUserId, onEdit, onDelete }: MessageItemProps) {
   const [hovered, setHovered]     = useState(false);
   const [editing, setEditing]     = useState(false);
   const [editValue, setEditValue] = useState(message.content);
@@ -72,32 +71,25 @@ export default function MessageItem({ message, showHeader = true, currentUserId,
         gap: 12,
         padding: "12px 16px",
         position: "relative",
-        animation: "slide-up-fade 0.15s ease-out",
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       role="article"
       aria-label={`Message from ${message.author.displayName} at ${timeAgo}`}
     >
-      {showHeader ? (
-        <div style={{ paddingTop: 2, flexShrink: 0, display: "flex" }}>
-          <Avatar user={message.author} size="lg" />
-        </div>
-      ) : (
-        <div style={{ paddingTop: 2, flexShrink: 0, width: 40, display: "flex" }} />
-      )}
+      <div style={{ paddingTop: 2, flexShrink: 0, display: "flex" }}>
+        <Avatar user={message.author} size="lg" />
+      </div>
 
       <div style={{ flex: 1, minWidth: 0, paddingTop: 2, display: "flex", flexDirection: "column" }}>
-        {showHeader && (
-          <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 3 }}>
-            <span style={{ fontSize: 15, fontWeight: 600, color: "var(--text-primary)", lineHeight: 1 }}>
-              {message.author.displayName}
-            </span>
-            <span style={{ fontSize: 11, color: "var(--text-muted)", lineHeight: 1 }}>
-              {timeAgo}
-            </span>
-          </div>
-        )}
+        <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 3 }}>
+          <span style={{ fontSize: 15, fontWeight: 600, color: "var(--text-primary)", lineHeight: 1 }}>
+            {message.author.displayName}
+          </span>
+          <span style={{ fontSize: 11, color: "var(--text-muted)", lineHeight: 1 }}>
+            {timeAgo}
+          </span>
+        </div>
 
         {editing ? (
           <div>

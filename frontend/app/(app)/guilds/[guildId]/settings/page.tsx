@@ -5,8 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import { mockGuilds, mockRoles, mockMembers } from "@/lib/mock";
 import { PERMISSIONS, PERMISSION_LABELS } from "@/lib/permissions";
 import { hasPermission } from "@/lib/utils";
-import { RoleEditorModal } from "@/components/guild/RoleEditorModal";
-import { api } from "@/lib/api";
 import type { Role, Member } from "@/types";
 import type { PermissionKey } from "@/lib/permissions";
 import { Trash2 } from "lucide-react";
@@ -38,11 +36,6 @@ export default function GuildSettingsPage() {
   );
   const [newRoleName, setNewRoleName] = useState("");
   const [newRoleColor, setNewRoleColor] = useState("#5865f2");
-  
-  // Role editor modal state
-  const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
-  const [isEditingRole, setIsEditingRole] = useState(false);
-  const [isSavingRole, setIsSavingRole] = useState(false);
 
   if (!guild) {
     router.replace("/channels/me");
@@ -55,16 +48,6 @@ export default function GuildSettingsPage() {
     // TODO: Replace with API call to PATCH /guilds/:guildId
     guild!.name = guildName;
     guild!.iconUrl = guildIcon;
-    
-    // Update mockGuilds immediately for instant UI update
-    const guildIndex = mockGuilds.findIndex((g) => g.id === guildId);
-    if (guildIndex !== -1) {
-      mockGuilds[guildIndex] = {
-        ...mockGuilds[guildIndex],
-        name: guildName,
-        iconUrl: guildIcon,
-      };
-    }
   }
 
   function handleIconUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -72,19 +55,7 @@ export default function GuildSettingsPage() {
     if (file) {
       const reader = new FileReader();
       reader.onload = (event) => {
-        const iconUrl = event.target?.result as string;
-        setGuildIcon(iconUrl);
-        
-        // Immediately update the guild object in mockGuilds
-        // This ensures the sidebar icon updates reactively without page reload
-        if (guild) {
-          guild.iconUrl = iconUrl;
-          // Trigger a re-render by updating mockGuilds reference
-          const guildIndex = mockGuilds.findIndex((g) => g.id === guildId);
-          if (guildIndex !== -1) {
-            mockGuilds[guildIndex] = { ...mockGuilds[guildIndex], iconUrl };
-          }
-        }
+        setGuildIcon(event.target?.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -120,43 +91,6 @@ export default function GuildSettingsPage() {
     setRoles((prev) => prev.filter((r) => r.id !== roleId));
     if (selectedRoleId === roleId) {
       setSelectedRoleId(roles.find((r) => r.id !== roleId)?.id ?? null);
-    }
-  }
-
-  /**
-   * Handle role edit modal save.
-   * Makes PATCH request to update role name and color.
-   * Optimistically updates UI, roll back on error.
-   */
-  async function handleEditRoleSave(roleId: string, name: string, color: string) {
-    setIsSavingRole(true);
-    try {
-      // Optimistic update
-      setRoles((prev) =>
-        prev.map((r) =>
-          r.id === roleId ? { ...r, name, color } : r
-        )
-      );
-
-      // TODO: Replace with API call to PATCH /guilds/:guildId/roles/:roleId
-      // const response = await api.patch(`/guilds/${guildId}/roles/${roleId}`, { name, color });
-      
-      // For now, mock the API call delay
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      
-      setIsEditingRole(false);
-      setEditingRoleId(null);
-    } catch (error) {
-      // Rollback
-      setRoles((prev) => {
-        const originalRole = mockRoles.find((r) => r.id === roleId);
-        return prev.map((r) =>
-          r.id === roleId && originalRole ? originalRole : r
-        );
-      });
-      throw error;
-    } finally {
-      setIsSavingRole(false);
     }
   }
 
@@ -409,34 +343,12 @@ export default function GuildSettingsPage() {
                         />
                         <p className="settings-panel-label">{selectedRole.name}</p>
                       </div>
-                      <div style={{ display: "flex", gap: 8 }}>
-                        <button
-                          className="role-delete-btn"
-                          onClick={() => {
-                            setEditingRoleId(selectedRole.id);
-                            setIsEditingRole(true);
-                          }}
-                          style={{
-                            background: "var(--accent)",
-                            color: "#fff",
-                            border: "none",
-                            padding: "8px 16px",
-                            borderRadius: "4px",
-                            cursor: "pointer",
-                            fontSize: "13px",
-                            fontWeight: 600,
-                            transition: "background-color 0.2s",
-                          }}
-                        >
-                          Edit Role
-                        </button>
-                        <button
-                          className="role-delete-btn"
-                          onClick={() => handleDeleteRole(selectedRole.id)}
-                        >
-                          Delete Role
-                        </button>
-                      </div>
+                      <button
+                        className="role-delete-btn"
+                        onClick={() => handleDeleteRole(selectedRole.id)}
+                      >
+                        Delete Role
+                      </button>
                     </div>
 
                     <div className="permissions-list">
@@ -507,22 +419,6 @@ export default function GuildSettingsPage() {
               ))}
             </div>
           </div>
-        )}
-
-        {/* ── Role Editor Modal ── */}
-        {isEditingRole && editingRoleId && selectedRole && (
-          <RoleEditorModal
-            roleId={selectedRole.id}
-            roleName={selectedRole.name}
-            roleColor={selectedRole.color ?? "#6c6fff"}
-            guildId={guildId}
-            onSave={handleEditRoleSave}
-            onClose={() => {
-              setIsEditingRole(false);
-              setEditingRoleId(null);
-            }}
-            isLoading={isSavingRole}
-          />
         )}
       </div>
     </div>

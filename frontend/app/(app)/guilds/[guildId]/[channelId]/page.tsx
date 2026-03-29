@@ -5,9 +5,8 @@ export const dynamic = "force-dynamic";
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { MessageCircle, Mic } from "lucide-react";
-import { mockGuilds, mockUser } from "@/lib/mock";
+import { mockGuilds, mockMessages, mockUser } from "@/lib/mock";
 import { useWebSocket } from "@/hooks/useWebSocket";
-import { useMessages } from "@/hooks/useMessages";
 import { VoiceChannel } from "@/components/voice/VoiceChannel";
 import MessageList from "@/components/chat/MessageList";
 import MessageInput from "@/components/chat/MessageInput";
@@ -19,7 +18,6 @@ export default function ChannelPage() {
   const guildId = params?.guildId as string;
   const channelId = params?.channelId as string;
   const [messages, setMessages] = useState<Message[]>([]);
-  const { messages: fetchedMessages, isLoading } = useMessages(channelId);
 
   const guild = mockGuilds.find((g) => g.id === guildId);
   const channel = guild?.channels.find((c) => c.id === channelId);
@@ -33,31 +31,34 @@ export default function ChannelPage() {
   });
 
   useEffect(() => {
-    setMessages(fetchedMessages);
-  }, [fetchedMessages]);
+    if (!channelId) return;
+    // TODO: Replace with API call to GET /channels/:channelId/messages
+    const channelMessages = mockMessages.filter((m) => m.channelId === channelId);
+    setMessages(channelMessages);
+  }, [channelId]);
 
   const handleSendMessage = (content: string, files: File[]) => {
-    if (!channelId) return;
-    const sent = send(channelId, content);
-    if (!sent) {
-      // TODO: replace with API call to POST /channels/:channelId/messages with multipart/form-data
-      const newMessage: Message = {
-        id: String(Date.now()),
-        channelId,
-        author: mockUser,
-        content,
-        createdAt: new Date().toISOString(),
-        attachments: files.map((file, i) => ({
-          id: `${Date.now()}-${i}`,
-          filename: file.name,
-          size: file.size,
-          mimeType: file.type,
-          url: URL.createObjectURL(file),
-        })),
-      };
-      setMessages((prev) => [...prev, newMessage]);
-    }
-  };
+  if (!channelId) return;
+  const sent = send(channelId, content);
+  if (!sent) {
+    // TODO: replace with API call to POST /channels/:channelId/messages with multipart/form-data
+    const newMessage: Message = {
+      id: String(Date.now()),
+      channelId,
+      author: mockUser,
+      content,
+      createdAt: new Date().toISOString(),
+      attachments: files.map((file, i) => ({
+        id: `${Date.now()}-${i}`,
+        filename: file.name,
+        size: file.size,
+        mimeType: file.type,
+        url: URL.createObjectURL(file),
+      })),
+    };
+    setMessages((prev) => [...prev, newMessage]);
+  }
+};
 
   const handleEditMessage = (messageId: string, newContent: string) => {
     // TODO: Replace with API call to PATCH /messages/:messageId
@@ -92,46 +93,10 @@ export default function ChannelPage() {
   if (channel.type === "VOICE") {
     return (
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        {/* Header */}
-        <div style={{
-          height: 52, minHeight: 52,
-          borderBottom: "1px solid var(--border)",
-          display: "flex", alignItems: "center",
-          padding: "0 20px", gap: 12,
-          background: "var(--bg-primary)",
-          flexShrink: 0,
-        }}>
-          <Mic size={18} />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{
-              fontFamily: "var(--font-display, 'Rajdhani', sans-serif)",
-              fontSize: 17, fontWeight: 700,
-              color: "var(--text-primary)", letterSpacing: "0.3px",
-            }}>
-              {channel.name}
-            </div>
-            <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
-              {channel.subType || "Voice Channel"}
-            </div>
-          </div>
-          {isConnected && (
-            <span style={{
-              fontSize: 11, fontWeight: 500,
-              color: "var(--success)",
-              background: "rgba(61,220,151,0.1)",
-              padding: "3px 10px", borderRadius: 99,
-            }}>
-              Live
-            </span>
-          )}
-        </div>
-
-        {/* Voice Channel Body */}
         <VoiceChannel
           channelId={channelId}
           channelName={channel.name}
           currentUser={mockUser}
-          connectedUsers={channel.connectedUsers || []}
         />
       </div>
     );
@@ -181,7 +146,6 @@ export default function ChannelPage() {
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
           <MessageList
             messages={messages}
-            isLoading={isLoading}
             currentUserId={mockUser.id}
             onEdit={handleEditMessage}
             onDelete={handleDeleteMessage}

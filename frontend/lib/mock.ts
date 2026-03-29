@@ -43,30 +43,8 @@ const mockUser5: User = {
 export const mockChannels: Channel[] = [
   { id: "101", guildId: "1", name: "general",       type: "TEXT",  category: "Rooms", subType: "DEFAULT",       position: 0 },
   { id: "102", guildId: "1", name: "announcements", type: "TEXT",  category: "Rooms", subType: "ANNOUNCEMENTS", position: 1 },
-  { 
-    id: "103", 
-    guildId: "1", 
-    name: "general",       
-    type: "VOICE", 
-    category: "Calls",
-    position: 2,
-    connectedUsers: [
-      { userId: "1", user: mockUser, isMuted: false },
-      { userId: "2", user: mockUser2, isMuted: false },
-      { userId: "4", user: mockUser4, isMuted: true },
-    ]
-  },
-  { 
-    id: "104", 
-    guildId: "1", 
-    name: "gaming",        
-    type: "VOICE", 
-    category: "Calls",
-    position: 3,
-    connectedUsers: [
-      { userId: "5", user: mockUser5, isMuted: false },
-    ]
-  },
+  { id: "103", guildId: "1", name: "general",       type: "VOICE", category: "Calls",                           position: 2 },
+  { id: "104", guildId: "1", name: "gaming",        type: "VOICE", category: "Calls",                           position: 3 },
 ];
 
 export const mockRoles: Role[] = [
