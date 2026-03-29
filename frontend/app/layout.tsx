@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { StompProvider } from "@/context/StompContext";
 
 export const metadata: Metadata = {
   title: "App",
@@ -14,7 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <ThemeProvider>
           <AuthProvider>
-            {children}
+            <StompProvider>{children}</StompProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

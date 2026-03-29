@@ -45,8 +45,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
-                    .requestMatchers("/ws", "/ws/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/ws", "/ws/**", "/ws-stomp", "/ws-stomp/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .headers(headers -> headers.frameOptions(frame -> frame.disable()))

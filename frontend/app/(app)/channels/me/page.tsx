@@ -16,6 +16,8 @@ import { dmApi } from "@/lib/dms";
 import { friendsApi, type FriendRequestResponse } from "@/lib/friends";
 import { FriendsPanel } from "@/components/dm/FriendsPanel";
 import type { User } from "@/types";
+import type { User as CallingUser } from "@/types/calling";
+import { useGlobalVoiceCall } from "@/context/GlobalVoiceCallContext";
 
 const MOCK_RICH_PRESENCE = { activity: "Playing Elden Ring", detail: "Exploring Limgrave • 2h 14m" };
 
@@ -35,6 +37,7 @@ export default function DirectMessagesPage() {
 
   const selectedUser = conversations.find((u) => u.id === selectedUserId);
   const dmChannelId = selectedUserId ? `dm_${selectedUserId}` : "";
+  const { initiateCall } = useGlobalVoiceCall();
 
   const { isConnected, send, authenticate } = useWebSocket({
     onMessage: (message: Message) => {
@@ -44,9 +47,6 @@ export default function DirectMessagesPage() {
           return [...prev, message];
         });
       } else {
-        // If we receive a message for a channel not currently selected,
-        // we could optionally play a sound or show a notification.
-        // For now, if they are not in the conversation list, trigger a refresh:
         const incomingUserId = message.channelId.replace("dm_", "");
         if (incomingUserId && !conversations.some(c => c.id === incomingUserId)) {
           refreshSocialData().catch(() => {});
@@ -113,10 +113,25 @@ export default function DirectMessagesPage() {
     return () => clearTimeout(timeoutId);
   }, [searchValue]);
 
+  const mapToCallingUser = useCallback((dmUser: User): CallingUser => {
+    return {
+      id: dmUser.id,
+      username: dmUser.username,
+      displayName: dmUser.displayName,
+      avatarUrl: dmUser.avatarUrl ?? "",
+    };
+  }, []);
+
+  const handleStartVoiceCall = useCallback(() => {
+    if (!selectedUser) {
+      return;
+    }
+    initiateCall(mapToCallingUser(selectedUser));
+  }, [initiateCall, mapToCallingUser, selectedUser]);
+
   const handleSendMessage = async (content: string, files: File[]) => {
     if (!selectedUserId || !dmChannelId || !content.trim()) return;
 
-    // Always do an optimistic update for best UX
     if (user) {
       const optimisticMessage: Message = {
         id: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -139,9 +154,8 @@ export default function DirectMessagesPage() {
     if (!sentOverSocket) {
       try {
         await dmApi.sendMessage(selectedUserId, content);
-        // DB handles generating true ID, it will be fetched on next history fetch.
       } catch {
-        // Keep UI stable; error toasts can be added in a dedicated notification layer.
+        // Error handling
       }
     }
   };
@@ -162,7 +176,6 @@ export default function DirectMessagesPage() {
   };
 
   const handleEditMessage = (messageId: string, newContent: string) => {
-    // TODO: Replace with API call to PATCH /messages/:messageId
     setMessages((prev) =>
       prev.map((m) =>
         m.id === messageId
@@ -173,7 +186,6 @@ export default function DirectMessagesPage() {
   };
 
   const handleDeleteMessage = (messageId: string) => {
-    // TODO: Replace with API call to DELETE /messages/:messageId
     setMessages((prev) => prev.filter((m) => m.id !== messageId));
   };
 
@@ -213,8 +225,7 @@ export default function DirectMessagesPage() {
   ) : null;
 
   return (
-    <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
-      {/* DM Sidebar */}
+    <div style={{ flex: 1, display: "flex", overflow: "hidden", position: "relative" }}>
       <DMSidebar
         conversations={conversations}
         selectedUserId={selectedUserId}
@@ -227,25 +238,17 @@ export default function DirectMessagesPage() {
             searchResults={searchResults}
             outgoingRequests={outgoingRequests}
             incomingRequests={incomingRequests}
-            onSendRequest={(targetUserId) => {
-              handleSendFriendRequest(targetUserId).catch(() => {});
-            }}
-            onAcceptRequest={(requestId) => {
-              handleAcceptRequest(requestId).catch(() => {});
-            }}
-            onDeclineRequest={(requestId) => {
-              handleDeclineRequest(requestId).catch(() => {});
-            }}
+            onSendRequest={handleSendFriendRequest}
+            onAcceptRequest={handleAcceptRequest}
+            onDeclineRequest={handleDeclineRequest}
             isBusy={isRefreshingSocial}
           />
         }
         bottomSlot={bottomSlot}
       />
 
-      {/* DM Chat Area */}
       {selectedUser ? (
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-          {/* Header */}
           <div
             style={{
               height: 52,
@@ -283,8 +286,9 @@ export default function DirectMessagesPage() {
               {statusLabel(selectedUser.status)}
             </span>
               <button
-                onClick={() => alert("Voice call integration coming soon: initialize hook here!")}
+                onClick={handleStartVoiceCall}
                 title="Start Voice Call"
+                disabled={!selectedUser}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -313,10 +317,10 @@ export default function DirectMessagesPage() {
 
             <MessageList
               messages={messages}
-            currentUserId={user?.id}
-            onEdit={handleEditMessage}
-            onDelete={handleDeleteMessage}
-          />
+              currentUserId={user?.id}
+              onEdit={handleEditMessage}
+              onDelete={handleDeleteMessage}
+            />
           <MessageInput channelName={selectedUser.displayName} onSend={handleSendMessage} />
         </div>
       ) : (
