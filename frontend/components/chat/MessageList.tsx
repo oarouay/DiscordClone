@@ -70,9 +70,20 @@ export default function MessageList({ messages, isLoading = false, currentUserId
         paddingBottom: 4,
       }}
     >
-      {messages.map((message) => (
-        <MessageItem key={message.id} message={message} currentUserId={currentUserId} onEdit={onEdit} onDelete={onDelete} />
-      ))}
+      {messages.map((message, index) => {
+        const previousMessage = index > 0 ? messages[index - 1] : null;
+        const hideUserInfo = previousMessage?.author.id === message.author.id;
+        return (
+          <MessageItem
+            key={message.id}
+            message={message}
+            hideUserInfo={hideUserInfo}
+            currentUserId={currentUserId}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
+        );
+      })}
       <div ref={messagesEndRef} />
     </div>
   );

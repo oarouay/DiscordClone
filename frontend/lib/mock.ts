@@ -97,7 +97,7 @@ export const mockMessages: Message[] = [
     id: "msg1",
     channelId: "101",
     author: mockUser2,
-    content: "Hey everyone! Welcome to the server 👋",
+    content: "Hey everyone! Welcome to the server :wave:",
     createdAt: new Date(Date.now() - 3600000).toISOString(),
   },
   {
@@ -118,14 +118,14 @@ export const mockMessages: Message[] = [
     id: "msg4",
     channelId: "101",
     author: mockUser4,
-    content: "This is awesome! What's everyone's favorite game?",
+    content: "This is awesome! What's everyone's favorite game? :thinking:",
     createdAt: new Date(Date.now() - 1800000).toISOString(),
   },
   {
     id: "msg5",
     channelId: "101",
     author: mockUser5,
-    content: "I've been playing Elden Ring recently, pretty fun!",
+    content: "I've been playing Elden Ring recently, pretty fun! :fire:",
     createdAt: new Date(Date.now() - 1200000).toISOString(),
   },
   {
@@ -136,6 +136,16 @@ export const mockMessages: Message[] = [
     createdAt: new Date(Date.now() - 600000).toISOString(),
   },
 ];
+
+export const mockVoiceChannelMembers: Record<string, Member[]> = {
+  "103": mockMembers.filter((m) => ["2", "4"].includes(m.userId)),
+  "104": [],
+};
+
+export const mockMemberVoiceStates: Record<string, { isMuted: boolean; isDeafened: boolean; serverMuted?: boolean; serverDeafened?: boolean }> = {
+  "2": { isMuted: false, isDeafened: false, serverMuted: false, serverDeafened: false },
+  "4": { isMuted: true, isDeafened: false, serverMuted: false, serverDeafened: false },
+};
 
 export const mockGuilds: Guild[] = [
   {
@@ -148,6 +158,110 @@ export const mockGuilds: Guild[] = [
     members: mockMembers,
   },
 ];
+
+// Voice channel members state
+export const voiceChannelMembers: Record<string, typeof mockUser[]> = {
+  "103": [
+    mockUser2,
+    mockUser4,
+  ],
+  "104": [],
+};
+
+// Enhanced user data with voice state for demonstration
+export const userVoiceStates: Record<
+  string,
+  {
+    isMuted: boolean;
+    isDeafened: boolean;
+    isSpeaking: boolean;
+  }
+> = {
+  "2": { isMuted: false, isDeafened: false, isSpeaking: true },
+  "4": { isMuted: true, isDeafened: false, isSpeaking: false },
+};
+
+// Embed database for link previews
+export const embedDatabase: Record<
+  string,
+  {
+    siteName: string;
+    title: string;
+    description: string;
+    image?: string;
+    color: string;
+  }
+> = {
+  "https://example.com/article": {
+    siteName: "Example",
+    title: "An Interesting Article",
+    description: "This is a short description of the linked content pulled from Open Graph metadata.",
+    image: "https://picsum.photos/seed/embed1/400/200",
+    color: "#5865F2",
+  },
+  "https://github.com/discord/cloneapp": {
+    siteName: "GitHub",
+    title: "discord/cloneapp - A Discord Clone Application",
+    description: "Full-stack Discord clone built with React, Next.js, and Spring Boot. Includes real-time messaging, voice calls, and guild management.",
+    image: "https://picsum.photos/seed/embed2/400/200",
+    color: "#1f6feb",
+  },
+  "https://youtube.com/watch?v=example": {
+    siteName: "YouTube",
+    title: "Amazing Gaming Moments Compilation",
+    description: "Best gaming moments from 2024 compiled into one epic video.",
+    image: "https://picsum.photos/seed/embed3/400/200",
+    color: "#ff0000",
+  },
+  "https://dev.to/tutorial": {
+    siteName: "dev.to",
+    title: "Building Real-Time Chat Applications",
+    description: "Learn how to build scalable real-time chat apps with WebSockets and modern frameworks.",
+    image: "https://picsum.photos/seed/embed4/400/200",
+    color: "#000000",
+  },
+};
+
+export function getEmbed(url: string) {
+  return embedDatabase[url] ?? null;
+}
+
+// Emoji map with common shortcodes
+export const emojiMap: Record<string, string> = {
+  ":wave:": "👋",
+  ":smile:": "😊",
+  ":fire:": "🔥",
+  ":heart:": "❤️",
+  ":thumbsup:": "👍",
+  ":joy:": "😂",
+  ":crying:": "😭",
+  ":thinking:": "🤔",
+  ":tada:": "🎉",
+  ":rocket:": "🚀",
+  ":heart_eyes:": "😍",
+  ":sunglasses:": "😎",
+  ":clap:": "👏",
+  ":skull:": "💀",
+  ":100:": "💯",
+  ":cool:": "😎",
+  ":yay:": "🎊",
+  ":pog:": "😮",
+  ":cat:": "🐱",
+  ":dog:": "🐶",
+  ":pizza:": "🍕",
+  ":coffee:": "☕",
+  ":beer:": "🍺",
+  ":sparkles:": "✨",
+  ":star:": "⭐",
+  ":moon:": "🌙",
+  ":sun:": "☀️",
+  ":snow:": "❄️",
+  ":rainbow:": "🌈",
+  ":music:": "🎵",
+  ":guitar:": "🎸",
+  ":computer:": "💻",
+  ":phone:": "📱",
+};
 
 export const mockDMConversations: User[] = [mockUser2, mockUser3, mockUser4, mockUser5];
 
@@ -219,14 +333,14 @@ export const mockDMMessages: Message[] = [
     id: "dm10",
     channelId: "dm_5",
     author: mockUser5,
-    content: "Check out this clip 🔥",
+    content: "Check out this clip :fire:",
     createdAt: new Date(Date.now() - 900000).toISOString(),
   },
   {
     id: "dm11",
     channelId: "dm_5",
     author: mockUser,
-    content: "Insane bro 😭",
+    content: "Insane bro :crying:",
     createdAt: new Date(Date.now() - 600000).toISOString(),
   },
 ];

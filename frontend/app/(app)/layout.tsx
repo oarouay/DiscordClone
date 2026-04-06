@@ -12,6 +12,7 @@ import { UserPanel } from "@/components/shared/UserPanel";
 import { VoiceControls } from "@/components/voice/VoiceControls";
 import type { Guild } from "@/types";
 import { VoiceCallProvider } from "@/context/GlobalVoiceCallContext";
+import { MockDataProvider } from "@/context/MockDataProvider";
 
 const MOCK_RICH_PRESENCE = { activity: "Playing Elden Ring", detail: "Exploring Limgrave • 2h 14m" };
 
@@ -108,17 +109,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   ) : null;
 
   return (
-    <VoiceCallProvider>
-      <div className="app-shell">
-        <GuildSidebar
-          guilds={guilds}
-          currentGuildId={selectedGuildId}
-          onGuildSelect={handleSelectGuild}
-          onCreateGuild={handleCreateGuild}
-        />
-        {!isOnDMPage && <ChannelSidebar bottomSlot={bottomSlot} onJoinVoice={handleJoinVoice} />}
-        <main className="app-main">{children}</main>
-      </div>
-    </VoiceCallProvider>
+    <MockDataProvider>
+      <VoiceCallProvider>
+        <div className="app-shell">
+          <GuildSidebar
+            guilds={guilds}
+            currentGuildId={selectedGuildId}
+            onGuildSelect={handleSelectGuild}
+            onCreateGuild={handleCreateGuild}
+          />
+          {!isOnDMPage && <ChannelSidebar bottomSlot={bottomSlot} onJoinVoice={handleJoinVoice} />}
+          <main className="app-main">{children}</main>
+        </div>
+      </VoiceCallProvider>
+    </MockDataProvider>
   );
 }

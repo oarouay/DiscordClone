@@ -12,19 +12,21 @@ export function MemberList({ members }: MemberListProps) {
   const membersByStatus = {
     online:  members.filter((m) => m.user.status === "online"),
     idle:    members.filter((m) => m.user.status === "idle"),
+    dnd:     members.filter((m) => m.user.status === "dnd"),
     offline: members.filter((m) => m.user.status === "offline"),
   };
 
   const statusDotColor = {
     online:  "var(--success)",
     idle:    "var(--warning)",
+    dnd:     "var(--danger)",
     offline: "var(--text-muted)",
   };
 
-  const renderMemberGroup = (status: "online" | "idle" | "offline", memberList: Member[]) => {
+  const renderMemberGroup = (status: "online" | "idle" | "dnd" | "offline", memberList: Member[]) => {
     if (memberList.length === 0) return null;
 
-    const statusLabels = { online: "Online", idle: "Idle", offline: "Offline" };
+    const statusLabels = { online: "Online", idle: "Idle", dnd: "Do Not Disturb", offline: "Offline" };
 
     return (
       <div key={status}>
@@ -168,6 +170,7 @@ export function MemberList({ members }: MemberListProps) {
       <div style={{ flex: 1, overflowY: "auto", padding: "10px 6px" }}>
         {renderMemberGroup("online",  membersByStatus.online)}
         {renderMemberGroup("idle",    membersByStatus.idle)}
+        {renderMemberGroup("dnd",     membersByStatus.dnd)}
         {renderMemberGroup("offline", membersByStatus.offline)}
       </div>
     </div>

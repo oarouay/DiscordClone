@@ -4,8 +4,9 @@ import { useCallback } from "react";
 import { Mic } from "lucide-react";
 import { useWebRTC } from "@/hooks/useWebRTC";
 import { useWebSocket } from "@/hooks/useWebSocket";
+import { useMockData } from "@/context/MockDataProvider";
 import { VoiceControls } from "./VoiceControls";
-import { ParticipantList } from "./ParticipantList";
+import { VoiceStagePanel } from "./VoiceStagePanel";
 import type { User } from "@/types";
 
 type Props = {
@@ -16,6 +17,10 @@ type Props = {
 
 export function VoiceChannel({ channelId, channelName, currentUser }: Props) {
   const { send } = useWebSocket({});
+  const mockData = useMockData();
+
+  // Get members in this voice channel
+  const voiceMembers = mockData.voiceChannelMembers[channelId] || [];
 
   const sendSignal = useCallback(
     (message: object) => {
@@ -66,12 +71,10 @@ export function VoiceChannel({ channelId, channelName, currentUser }: Props) {
             </button>
           </div>
         ) : (
-          <ParticipantList
-            participants={participants}
+          <VoiceStagePanel 
+            members={voiceMembers} 
             currentUserId={currentUser.id}
-            currentUserName={currentUser.displayName}
-            isMuted={isMuted}
-            isDeafened={isDeafened}
+            onDisconnect={leave}
           />
         )}
       </div>

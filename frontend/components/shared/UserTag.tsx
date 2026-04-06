@@ -6,6 +6,7 @@ export function UserTag({ user, showStatus = true }: { user: User; showStatus?: 
   const statusColors = {
     online:  "var(--success)",
     idle:    "var(--warning)",
+    dnd:     "var(--danger)",
     offline: "var(--text-muted)",
   };
 
@@ -60,6 +61,7 @@ export function StatusBadge({ status }: { status: User["status"] }) {
   const statusConfig = {
     online:  { color: "var(--success)", label: "Online" },
     idle:    { color: "var(--warning)", label: "Idle" },
+    dnd:     { color: "var(--danger)", label: "Do Not Disturb" },
     offline: { color: "var(--text-muted)", label: "Offline" },
   };
 

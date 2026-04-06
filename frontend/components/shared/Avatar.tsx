@@ -17,11 +17,11 @@ function avatarColor(username: string): string {
 
 export function Avatar({ user, size = "md" }: { user: User; size?: "sm" | "md" | "lg" }) {
   const sizeMap = {
-    sm: { dim: 28, font: 11 },
-    md: { dim: 36, font: 13 },
-    lg: { dim: 42, font: 15 },
+    sm: { dim: 28 },
+    md: { dim: 36 },
+    lg: { dim: 42 },
   };
-  const { dim, font } = sizeMap[size];
+  const { dim } = sizeMap[size];
 
   const initials = (user.displayName || user.username)
     .split(" ")

@@ -11,8 +11,10 @@ export type User = {
   username: string;
   displayName: string;
   email: string;
-  status: "online" | "idle" | "offline";
+  status: "online" | "idle" | "dnd" | "offline";
   avatarUrl?: string;
+  isAdmin?: boolean;
+  timeoutUntil?: string;
 };
 
 export type Guild = {

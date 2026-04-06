@@ -3,10 +3,12 @@ import { Edit2, Trash2, Check, X } from "lucide-react";
 import type { Message } from "@/types";
 import { Avatar } from "@/components/shared/Avatar";
 import { MessageAttachments } from "./MessageAttachments";
+import { RichText } from "./RichText";
 
 interface MessageItemProps {
   message: Message;
   currentUserId?: string;
+  hideUserInfo?: boolean;
   onEdit?: (messageId: string, newContent: string) => void;
   onDelete?: (messageId: string) => void;
 }
@@ -24,7 +26,7 @@ function formatTimeAgo(date: Date): string {
   return date.toLocaleDateString();
 }
 
-export default function MessageItem({ message, currentUserId, onEdit, onDelete }: MessageItemProps) {
+export default function MessageItem({ message, currentUserId, hideUserInfo = false, onEdit, onDelete }: MessageItemProps) {
   const [hovered, setHovered]     = useState(false);
   const [editing, setEditing]     = useState(false);
   const [editValue, setEditValue] = useState(message.content);
@@ -68,8 +70,8 @@ export default function MessageItem({ message, currentUserId, onEdit, onDelete }
         backgroundColor: hovered ? "rgba(255,255,255,0.025)" : undefined,
         display: "flex",
         alignItems: "flex-start",
-        gap: 12,
-        padding: "12px 16px",
+        gap: hideUserInfo ? 0 : 12,
+        padding: hideUserInfo ? "2px 16px 4px 68px" : "12px 16px",
         position: "relative",
       }}
       onMouseEnter={() => setHovered(true)}
@@ -77,19 +79,23 @@ export default function MessageItem({ message, currentUserId, onEdit, onDelete }
       role="article"
       aria-label={`Message from ${message.author.displayName} at ${timeAgo}`}
     >
-      <div style={{ paddingTop: 2, flexShrink: 0, display: "flex" }}>
-        <Avatar user={message.author} size="lg" />
-      </div>
-
-      <div style={{ flex: 1, minWidth: 0, paddingTop: 2, display: "flex", flexDirection: "column" }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 3 }}>
-          <span style={{ fontSize: 15, fontWeight: 600, color: "var(--text-primary)", lineHeight: 1 }}>
-            {message.author.displayName}
-          </span>
-          <span style={{ fontSize: 11, color: "var(--text-muted)", lineHeight: 1 }}>
-            {timeAgo}
-          </span>
+      {!hideUserInfo && (
+        <div style={{ paddingTop: 2, flexShrink: 0, display: "flex" }}>
+          <Avatar user={message.author} size="lg" />
         </div>
+      )}
+
+      <div style={{ flex: 1, minWidth: 0, paddingTop: hideUserInfo ? 0 : 2, display: "flex", flexDirection: "column" }}>
+        {!hideUserInfo && (
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 3 }}>
+            <span style={{ fontSize: 15, fontWeight: 600, color: "var(--text-primary)", lineHeight: 1 }}>
+              {message.author.displayName}
+            </span>
+            <span style={{ fontSize: 11, color: "var(--text-muted)", lineHeight: 1 }}>
+              {timeAgo}
+            </span>
+          </div>
+        )}
 
         {editing ? (
           <div>
@@ -131,9 +137,9 @@ export default function MessageItem({ message, currentUserId, onEdit, onDelete }
           </div>
         ) : (
           <>
-            <p style={{ fontSize: 15, color: "var(--text-secondary)", lineHeight: 1.55, wordBreak: "break-word", whiteSpace: "pre-wrap", margin: 0 }}>
-              {message.content}
-            </p>
+            <div style={{ fontSize: 15, color: "var(--text-secondary)", lineHeight: 1.55, wordBreak: "break-word", whiteSpace: "pre-wrap" }}>
+              <RichText content={message.content} />
+            </div>
             {message.attachments && message.attachments.length > 0 && (
               <MessageAttachments attachments={message.attachments} />
             )}

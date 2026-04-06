@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { MessageCircle, Mic } from "lucide-react";
 import type { Channel } from "@/types";
+import { VoiceSidebarEntry } from "@/components/voice/VoiceSidebarEntry";
+import { useMockData } from "@/context/MockDataProvider";
 
 type ChannelItemProps = {
   channel: Channel;
@@ -15,6 +17,10 @@ type ChannelItemProps = {
 export function ChannelItem({ channel, isSelected, guildId, onJoinVoice }: ChannelItemProps) {
   const [hovered, setHovered] = useState(false);
   const isVoice = channel.type === "VOICE";
+  const mockData = useMockData();
+  
+  // Get members in this voice channel
+  const voiceMembers = mockData.voiceChannelMembers[channel.id] || [];
 
   return (
     <li style={{ listStyle: "none" }}>
@@ -48,6 +54,9 @@ export function ChannelItem({ channel, isSelected, guildId, onJoinVoice }: Chann
           {channel.name}
         </span>
       </Link>
+      {isSelected && isVoice && voiceMembers.length > 0 && (
+        <VoiceSidebarEntry members={voiceMembers} />
+      )}
     </li>
   );
 }
