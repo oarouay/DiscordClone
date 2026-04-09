@@ -1,9 +1,9 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { getToken, setToken, clearToken, isTokenExpired } from "@/lib/auth";
-import { mockUser } from "@/lib/mock";
 import type { User } from "@/types";
 
 type AuthContextValue = {
@@ -22,14 +22,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setTokenState] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const stored = getToken();
 
     if (!stored || isTokenExpired(stored)) {
       clearToken();
-      // TODO: remove mockUser fallback when backend is ready
-      setUser(mockUser);
       setIsLoading(false);
       return;
     }
@@ -40,8 +39,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .get<User>("/users/me")
       .then((me) => setUser(me))
       .catch(() => {
-        // TODO: replace with proper error handling when backend is ready
-        setUser(mockUser);
+        clearToken();
+        setTokenState(null);
       })
       .finally(() => setIsLoading(false));
   }, []);
@@ -52,11 +51,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(newUser);
   }
 
-  function logout() {
+  const logout = useCallback(() => {
     clearToken();
     setTokenState(null);
     setUser(null);
-  }
+    router.replace("/login");
+  }, [router]);
 
   return (
     <AuthContext.Provider value={{ user, token, isLoading, login, logout }}>
