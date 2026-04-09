@@ -9,6 +9,7 @@ type FriendsPanelProps = {
   onSearchValueChange: (value: string) => void;
   searchResults: User[];
   isSearching?: boolean;
+  friendRequestError?: string;
   outgoingRequests: FriendRequestResponse[];
   incomingRequests: FriendRequestResponse[];
   onSendRequest: (targetUserId: string) => void;
@@ -22,6 +23,7 @@ export function FriendsPanel({
   onSearchValueChange,
   searchResults,
   isSearching = false,
+  friendRequestError = "",
   outgoingRequests,
   incomingRequests,
   onSendRequest,
@@ -101,6 +103,12 @@ export function FriendsPanel({
             })
           )}
         </div>
+      )}
+
+      {friendRequestError && (
+        <p style={{ fontSize: 11, color: "var(--danger)", padding: "2px 2px" }}>
+          {friendRequestError}
+        </p>
       )}
 
       <div style={{ display: "grid", gap: 6 }}>

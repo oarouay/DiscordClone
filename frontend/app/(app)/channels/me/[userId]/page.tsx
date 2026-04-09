@@ -29,6 +29,8 @@ export default function DirectMessagePage() {
   const [conversations, setConversations] = useState<User[]>([]);
   const [incomingRequests, setIncomingRequests] = useState<FriendRequestResponse[]>([]);
   const [outgoingRequests, setOutgoingRequests] = useState<FriendRequestResponse[]>([]);
+  const [friendRequestError, setFriendRequestError] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [searchResults, setSearchResults] = useState<User[]>([]);
   const [isRefreshingSocial, setIsRefreshingSocial] = useState(false);
@@ -99,19 +101,28 @@ export default function DirectMessagePage() {
   }, [userId]);
 
   useEffect(() => {
+    setFriendRequestError("");
+    
     const normalized = searchValue.trim();
     if (normalized.length < 2) {
       setSearchResults([]);
+      setIsSearching(false);
       return;
     }
+
+    setIsSearching(true);
 
     const timeoutId = setTimeout(() => {
       friendsApi.searchUsers(normalized)
         .then((results) => setSearchResults(results))
-        .catch(() => setSearchResults([]));
+        .catch(() => setSearchResults([]))
+        .finally(() => setIsSearching(false));
     }, 250);
 
-    return () => clearTimeout(timeoutId);
+    return () => {
+      clearTimeout(timeoutId);
+      setIsSearching(false);
+    };
   }, [searchValue]);
 
   const mapToCallingUser = useCallback((dmUser: User): CallingUser => {
@@ -162,9 +173,18 @@ export default function DirectMessagePage() {
   };
 
   const handleSendFriendRequest = async (targetUserId: string) => {
-    await friendsApi.sendRequest(targetUserId);
-    await refreshSocialData();
-  };
+    setFriendRequestError("");
+    try {
+      await friendsApi.sendRequest(targetUserId);
+      setSearchValue("");
+      setSearchResults([]);
+      await refreshSocialData();
+    } catch (err) {
+      setFriendRequestError(
+        err instanceof Error ? err.message : "Could not send friend request."
+      );
+    }
+};
 
   const handleAcceptRequest = async (requestId: string) => {
     await friendsApi.acceptRequest(requestId);
@@ -267,6 +287,8 @@ export default function DirectMessagePage() {
             searchValue={searchValue}
             onSearchValueChange={setSearchValue}
             searchResults={searchResults}
+            isSearching={isSearching}
+            friendRequestError={friendRequestError}
             outgoingRequests={outgoingRequests}
             incomingRequests={incomingRequests}
             onSendRequest={handleSendFriendRequest}

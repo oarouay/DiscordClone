@@ -28,6 +28,7 @@ export default function DirectMessagesPage() {
   const [searchResults, setSearchResults] = useState<User[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isRefreshingSocial, setIsRefreshingSocial] = useState(false);
+  const [friendRequestError, setFriendRequestError] = useState("");
   const [isMuted, setIsMuted] = useState(false);
   const [isDeafened, setIsDeafened] = useState(false);
   const [activeTab, setActiveTab] = useState<"friends" | "pending" | "add">("friends");
@@ -78,6 +79,8 @@ export default function DirectMessagesPage() {
   }, [user, refreshSocialData]);
 
   useEffect(() => {
+    setFriendRequestError("");
+    
     const normalized = searchValue.trim();
     if (normalized.length < 2) {
       setSearchResults([]);
@@ -101,8 +104,17 @@ export default function DirectMessagesPage() {
   }, [searchValue]);
 
   const handleSendFriendRequest = async (targetUserId: string) => {
-    await friendsApi.sendRequest(targetUserId);
-    await refreshSocialData();
+    setFriendRequestError("");
+    try {
+      await friendsApi.sendRequest(targetUserId);
+      setSearchValue("");
+      setSearchResults([]);
+      await refreshSocialData();
+    } catch (err) {
+      setFriendRequestError(
+        err instanceof Error ? err.message : "Could not send friend request."
+      );
+    }
   };
 
   const handleAcceptRequest = async (requestId: string) => {
@@ -143,6 +155,7 @@ export default function DirectMessagesPage() {
             onSearchValueChange={setSearchValue}
             searchResults={searchResults}
             isSearching={isSearching}
+            friendRequestError={friendRequestError}
             outgoingRequests={outgoingRequests}
             incomingRequests={incomingRequests}
             onSendRequest={handleSendFriendRequest}
@@ -426,7 +439,16 @@ export default function DirectMessagesPage() {
 
               {searchValue.trim().length >= 2 && (
                 <div style={{ display: "grid", gap: "8px" }}>
-                  {searchResults.length === 0 ? (
+                  {friendRequestError && (
+                    <p style={{ fontSize: 13, color: "var(--danger)", padding: "4px 0" }}>
+                      {friendRequestError}
+                    </p>
+                  )}
+                  {isSearching ? (
+                    <div style={{ textAlign: "center", color: "var(--text-muted)", padding: "16px" }}>
+                      Searching…
+                    </div>
+                  ) : searchResults.length === 0 ? (
                     <div style={{ textAlign: "center", color: "var(--text-muted)", padding: "16px" }}>
                       No users found
                     </div>
