@@ -17,7 +17,7 @@ import { MockDataProvider } from "@/context/MockDataProvider";
 const MOCK_RICH_PRESENCE = { activity: "Playing Elden Ring", detail: "Exploring Limgrave • 2h 14m" };
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [guilds, setGuilds] = useState<Guild[]>([]);
@@ -29,7 +29,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (isLoading) return;
-    if (!user) { router.replace("/login"); return; }
+    if (!user) {
+      router.replace("/login");
+      return;
+    }
+    // TODO: replace with API call to GET /guilds
     setGuilds(mockGuilds);
     if (mockGuilds.length > 0) {
       const firstGuild = mockGuilds[0];
@@ -41,6 +45,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [user, isLoading, router]);
 
   const handleCreateGuild = async (name: string, guildType: "HOUSE" | "CRIB") => {
+    // TODO: replace with API call to POST /guilds
     const guildId = String(Date.now());
     const newGuild: Guild = {
       id: guildId, name, guildType, isPrivate: guildType === "HOUSE", ownerId: user?.id || "1",
@@ -68,9 +73,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     setIsDeafened(false);
   };
 
-  const handleLeaveVoice = () => { setVoiceChannel(null); setIsMuted(false); setIsDeafened(false); };
+  const handleLeaveVoice = () => {
+    setVoiceChannel(null);
+    setIsMuted(false);
+    setIsDeafened(false);
+  };
 
-  if (isLoading || isLoadingGuilds) {
+  if (isLoading) {
     return (
       <div className="app-loading">
         <p className="app-loading-text">Loading…</p>
@@ -78,7 +87,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  const bottomSlot = user ? (
+  if (!user) return null;
+
+  const bottomSlot = (
     <>
       {voiceChannel && (
         <div className="voice-bar-wrap">
@@ -102,11 +113,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         isDeafened={isDeafened}
         onToggleMute={() => setIsMuted((m) => !m)}
         onToggleDeafen={() => setIsDeafened((d) => !d)}
-        onLogout={() => router.push("/login")}
+        onLogout={logout}
         onSave={(updates) => { Object.assign(user, updates); }}
       />
     </>
-  ) : null;
+  );
 
   return (
     <MockDataProvider>
