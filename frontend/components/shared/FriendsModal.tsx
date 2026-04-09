@@ -1,81 +1,51 @@
 "use client";
 
-export const dynamic = "force-dynamic";
+import { X, UserPlus, Check, X as XIcon, Clock } from "lucide-react";
+import { useState, useEffect } from "react";
+import { friendsApi, type FriendRequestResponse, type FriendResponse } from "@/lib/friends";
+import type { User } from "@/types";
 
-import { useState, useEffect, useCallback } from "react";
-import { UserPlus, Check, X as XIcon, Clock } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useWebSocket } from "@/hooks/useWebSocket";
-import { useAuth } from "@/context/AuthContext";
-import { DMSidebar } from "@/components/dm/DMSidebar";
-import { UserPanel } from "@/components/shared/UserPanel";
-import { VoiceControls } from "@/components/voice/VoiceControls";
-import { dmApi } from "@/lib/dms";
-import { friendsApi, type FriendResponse, type FriendRequestResponse } from "@/lib/friends";
-import { FriendsPanel } from "@/components/dm/FriendsPanel";
-import type { Message, User } from "@/types";
+interface FriendsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
 
-const MOCK_RICH_PRESENCE = { activity: "Playing Elden Ring", detail: "Exploring Limgrave • 2h 14m" };
-
-export default function DirectMessagesPage() {
-  const router = useRouter();
-  const { user, token } = useAuth();
-  const [conversations, setConversations] = useState<User[]>([]);
+export function FriendsModal({ isOpen, onClose }: FriendsModalProps) {
   const [friends, setFriends] = useState<FriendResponse[]>([]);
   const [incomingRequests, setIncomingRequests] = useState<FriendRequestResponse[]>([]);
   const [outgoingRequests, setOutgoingRequests] = useState<FriendRequestResponse[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const [searchResults, setSearchResults] = useState<User[]>([]);
-  const [isRefreshingSocial, setIsRefreshingSocial] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isDeafened, setIsDeafened] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"friends" | "pending" | "add">("friends");
 
-  const { isConnected, authenticate } = useWebSocket({
-    onMessage: (message: Message) => {
-      // Just refresh conversations when new messages arrive
-      const incomingUserId = message.channelId.replace("dm_", "");
-      if (incomingUserId && !conversations.some(c => c.id === incomingUserId)) {
-        refreshSocialData().catch(() => {});
+  // Load friends and requests when modal opens
+  useEffect(() => {
+    if (!isOpen) {
+      setIsLoading(false);
+      return;
+    }
+
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        const [f, i, o] = await Promise.all([
+          friendsApi.listFriends(),
+          friendsApi.listIncomingRequests(),
+          friendsApi.listOutgoingRequests(),
+        ]);
+        setFriends(f);
+        setIncomingRequests(i);
+        setOutgoingRequests(o);
+      } finally {
+        setIsLoading(false);
       }
-    },
-  });
+    };
 
-  useEffect(() => {
-    if (isConnected && token) {
-      authenticate(token);
-    }
-  }, [isConnected, token, authenticate]);
+    loadData();
+  }, [isOpen]);
 
-  const refreshSocialData = useCallback(async () => {
-    setIsRefreshingSocial(true);
-    try {
-      const [conversationResponse, friendsList, incoming, outgoing] = await Promise.all([
-        dmApi.listConversations(),
-        friendsApi.listFriends(),
-        friendsApi.listIncomingRequests(),
-        friendsApi.listOutgoingRequests(),
-      ]);
-
-      setConversations(conversationResponse.map((item) => item.user));
-      setFriends(friendsList);
-      setIncomingRequests(incoming);
-      setOutgoingRequests(outgoing);
-    } finally {
-      setIsRefreshingSocial(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!user) return;
-    refreshSocialData().catch(() => {
-      setConversations([]);
-      setFriends([]);
-      setIncomingRequests([]);
-      setOutgoingRequests([]);
-    });
-  }, [user, refreshSocialData]);
-
+  // Search when search value changes
   useEffect(() => {
     const normalized = searchValue.trim();
     if (normalized.length < 2) {
@@ -92,74 +62,117 @@ export default function DirectMessagesPage() {
     return () => clearTimeout(timeoutId);
   }, [searchValue, searchResults.length]);
 
-  const handleSendFriendRequest = async (targetUserId: string) => {
-    await friendsApi.sendRequest(targetUserId);
-    await refreshSocialData();
+  const handleAccept = async (requestId: string) => {
+    try {
+      await friendsApi.acceptRequest(requestId);
+      setIncomingRequests(prev => prev.filter(r => r.id !== requestId));
+    } catch (error) {
+      console.error("Failed to accept request", error);
+    }
   };
 
-  const handleAcceptRequest = async (requestId: string) => {
-    await friendsApi.acceptRequest(requestId);
-    await refreshSocialData();
+  const handleDecline = async (requestId: string) => {
+    try {
+      await friendsApi.declineRequest(requestId);
+      setIncomingRequests(prev => prev.filter(r => r.id !== requestId));
+    } catch (error) {
+      console.error("Failed to decline request", error);
+    }
   };
 
-  const handleDeclineRequest = async (requestId: string) => {
-    await friendsApi.declineRequest(requestId);
-    await refreshSocialData();
+  const handleSendRequest = async (targetUserId: string) => {
+    try {
+      await friendsApi.sendRequest(targetUserId);
+      setSearchResults(prev => prev.filter(u => u.id !== targetUserId));
+    } catch (error) {
+      console.error("Failed to send request", error);
+    }
   };
 
-  const bottomSlot = user ? (
-    <UserPanel
-      user={user}
-      richPresence={MOCK_RICH_PRESENCE}
-      isMuted={isMuted}
-      isDeafened={isDeafened}
-      onToggleMute={() => setIsMuted((m) => !m)}
-      onToggleDeafen={() => setIsDeafened((d) => !d)}
-      onLogout={() => {}}
-      onSave={(updates) => { Object.assign(user, updates); }}
-    />
-  ) : null;
+  if (!isOpen) return null;
 
-  const outgoingTargetIds = new Set(outgoingRequests.map(r => r.receiver.id));
   const totalPending = incomingRequests.length + outgoingRequests.length;
+  const outgoingTargetIds = new Set(outgoingRequests.map(r => r.receiver.id));
 
   return (
-    <div style={{ flex: 1, display: "flex", overflow: "hidden", position: "relative" }}>
-      <DMSidebar
-        conversations={conversations}
-        onSelectUser={(id) => router.push(`/channels/me/${id}`)}
-        isConnected={isConnected}
-        topSlot={
-          <FriendsPanel
-            searchValue={searchValue}
-            onSearchValueChange={setSearchValue}
-            searchResults={searchResults}
-            outgoingRequests={outgoingRequests}
-            incomingRequests={incomingRequests}
-            onSendRequest={handleSendFriendRequest}
-            onAcceptRequest={handleAcceptRequest}
-            onDeclineRequest={handleDeclineRequest}
-            isBusy={isRefreshingSocial}
-          />
-        }
-        bottomSlot={bottomSlot}
-      />
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0, 0, 0, 0.5)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 1000,
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          background: "var(--bg-primary)",
+          borderRadius: "12px",
+          width: "90%",
+          maxWidth: "540px",
+          maxHeight: "80vh",
+          display: "flex",
+          flexDirection: "column",
+          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.5)",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div
+          style={{
+            padding: "16px 20px",
+            borderBottom: "1px solid var(--border)",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexShrink: 0,
+          }}
+        >
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "var(--text-primary)" }}>
+            Friends
+          </h2>
+          <button
+            onClick={onClose}
+            style={{
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              padding: "4px",
+              color: "var(--text-muted)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <X size={20} />
+          </button>
+        </div>
 
-      {/* Main friends panel content */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", background: "var(--bg-primary)" }}>
-        {/* Tabs header */}
-        <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border)", display: "flex", gap: "8px" }}>
+        {/* Tabs */}
+        <div
+          style={{
+            display: "flex",
+            borderBottom: "1px solid var(--border)",
+            padding: "0 8px",
+            gap: "4px",
+            flexShrink: 0,
+          }}
+        >
           <button
             onClick={() => setActiveTab("friends")}
             style={{
-              padding: "8px 16px",
+              flex: 1,
+              padding: "12px 16px",
               background: activeTab === "friends" ? "var(--accent)" : "transparent",
               border: "none",
               color: activeTab === "friends" ? "#fff" : "var(--text-muted)",
               cursor: "pointer",
               fontSize: 14,
               fontWeight: 600,
-              borderRadius: "6px",
+              borderRadius: "8px 8px 0 0",
               transition: "all 0.2s",
             }}
           >
@@ -168,14 +181,15 @@ export default function DirectMessagesPage() {
           <button
             onClick={() => setActiveTab("pending")}
             style={{
-              padding: "8px 16px",
+              flex: 1,
+              padding: "12px 16px",
               background: activeTab === "pending" ? "var(--accent)" : "transparent",
               border: "none",
               color: activeTab === "pending" ? "#fff" : "var(--text-muted)",
               cursor: "pointer",
               fontSize: 14,
               fontWeight: 600,
-              borderRadius: "6px",
+              borderRadius: "8px 8px 0 0",
               transition: "all 0.2s",
             }}
           >
@@ -184,35 +198,37 @@ export default function DirectMessagesPage() {
           <button
             onClick={() => setActiveTab("add")}
             style={{
-              padding: "8px 16px",
+              flex: 1,
+              padding: "12px 16px",
               background: activeTab === "add" ? "var(--accent)" : "transparent",
               border: "none",
               color: activeTab === "add" ? "#fff" : "var(--text-muted)",
               cursor: "pointer",
               fontSize: 14,
               fontWeight: 600,
-              borderRadius: "6px",
+              borderRadius: "8px 8px 0 0",
               transition: "all 0.2s",
             }}
           >
             <UserPlus size={16} style={{ display: "inline", marginRight: "4px" }} />
-            Add Friend
+            Add
           </button>
         </div>
 
-        {/* Content area */}
-        <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px" }}>
-          {activeTab === "friends" ? (
+        {/* Content */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "16px" }}>
+          {isLoading ? (
+            <div style={{ textAlign: "center", color: "var(--text-muted)" }}>Loading...</div>
+          ) : activeTab === "friends" ? (
             friends.length === 0 ? (
-              <div style={{ textAlign: "center", color: "var(--text-muted)", paddingTop: "40px" }}>
-                <p>No friends yet</p>
+              <div style={{ textAlign: "center", color: "var(--text-muted)", padding: "32px 16px" }}>
+                <p>No friends yet. Add someone!</p>
               </div>
             ) : (
               <div style={{ display: "grid", gap: "8px" }}>
                 {friends.map((friend) => (
                   <div
                     key={friend.user.id}
-                    onClick={() => router.push(`/channels/me/${friend.user.id}`)}
                     style={{
                       display: "flex",
                       alignItems: "center",
@@ -220,11 +236,7 @@ export default function DirectMessagesPage() {
                       padding: "12px",
                       background: "var(--bg-hover)",
                       borderRadius: "8px",
-                      cursor: "pointer",
-                      transition: "background 0.2s",
                     }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = "var(--accent-hover)")}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = "var(--bg-hover)")}
                   >
                     <div
                       style={{
@@ -258,7 +270,16 @@ export default function DirectMessagesPage() {
             <div style={{ display: "grid", gap: "16px" }}>
               {incomingRequests.length > 0 && (
                 <div>
-                  <h3 style={{ margin: "0 0 12px 0", fontSize: 12, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  <h3
+                    style={{
+                      margin: "0 0 12px 0",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "var(--text-muted)",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.08em",
+                    }}
+                  >
                     Incoming ({incomingRequests.length})
                   </h3>
                   <div style={{ display: "grid", gap: "8px" }}>
@@ -300,7 +321,7 @@ export default function DirectMessagesPage() {
                         </div>
                         <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
                           <button
-                            onClick={() => handleAcceptRequest(request.id)}
+                            onClick={() => handleAccept(request.id)}
                             style={{
                               background: "var(--success)",
                               border: "none",
@@ -317,7 +338,7 @@ export default function DirectMessagesPage() {
                             <Check size={16} />
                           </button>
                           <button
-                            onClick={() => handleDeclineRequest(request.id)}
+                            onClick={() => handleDecline(request.id)}
                             style={{
                               background: "var(--danger)",
                               border: "none",
@@ -342,7 +363,16 @@ export default function DirectMessagesPage() {
 
               {outgoingRequests.length > 0 && (
                 <div>
-                  <h3 style={{ margin: "0 0 12px 0", fontSize: 12, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  <h3
+                    style={{
+                      margin: "0 0 12px 0",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "var(--text-muted)",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.08em",
+                    }}
+                  >
                     Outgoing ({outgoingRequests.length})
                   </h3>
                   <div style={{ display: "grid", gap: "8px" }}>
@@ -394,7 +424,7 @@ export default function DirectMessagesPage() {
               )}
 
               {incomingRequests.length === 0 && outgoingRequests.length === 0 && (
-                <div style={{ textAlign: "center", color: "var(--text-muted)", paddingTop: "40px" }}>
+                <div style={{ textAlign: "center", color: "var(--text-muted)", padding: "32px 16px" }}>
                   <p>No pending requests</p>
                 </div>
               )}
@@ -422,11 +452,11 @@ export default function DirectMessagesPage() {
                       No users found
                     </div>
                   ) : (
-                    searchResults.map((searchUser) => {
-                      const alreadyRequested = outgoingTargetIds.has(searchUser.id);
+                    searchResults.map((user) => {
+                      const alreadyRequested = outgoingTargetIds.has(user.id);
                       return (
                         <div
-                          key={searchUser.id}
+                          key={user.id}
                           style={{
                             display: "flex",
                             alignItems: "center",
@@ -441,7 +471,7 @@ export default function DirectMessagesPage() {
                               width: 40,
                               height: 40,
                               borderRadius: "50%",
-                              background: `hsl(${(searchUser.username.charCodeAt(0) * 7) % 360}, 70%, 50%)`,
+                              background: `hsl(${(user.username.charCodeAt(0) * 7) % 360}, 70%, 50%)`,
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
@@ -450,18 +480,18 @@ export default function DirectMessagesPage() {
                               flexShrink: 0,
                             }}
                           >
-                            {searchUser.displayName[0]}
+                            {user.displayName[0]}
                           </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>
-                              {searchUser.displayName}
+                              {user.displayName}
                             </div>
                             <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
-                              @{searchUser.username}
+                              @{user.username}
                             </div>
                           </div>
                           <button
-                            onClick={() => handleSendFriendRequest(searchUser.id)}
+                            onClick={() => handleSendRequest(user.id)}
                             disabled={alreadyRequested}
                             style={{
                               padding: "8px 12px",
@@ -486,7 +516,7 @@ export default function DirectMessagesPage() {
               )}
 
               {searchValue.trim().length === 0 && (
-                <div style={{ textAlign: "center", color: "var(--text-muted)", paddingTop: "40px" }}>
+                <div style={{ textAlign: "center", color: "var(--text-muted)", padding: "32px 16px" }}>
                   <p>Search for a username or email to add a friend</p>
                 </div>
               )}
@@ -494,14 +524,6 @@ export default function DirectMessagesPage() {
           )}
         </div>
       </div>
-
-      <VoiceControls
-        isMuted={isMuted}
-        isDeafened={isDeafened}
-        onToggleMute={() => setIsMuted((m) => !m)}
-        onToggleDeafen={() => setIsDeafened((d) => !d)}
-        onLeave={() => {}}
-      />
     </div>
   );
 }

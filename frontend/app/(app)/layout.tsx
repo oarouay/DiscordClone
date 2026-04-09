@@ -10,6 +10,8 @@ import { GuildSidebar } from "@/components/guild/GuildSidebar";
 import { ChannelSidebar } from "@/components/channel/ChannelSidebar";
 import { UserPanel } from "@/components/shared/UserPanel";
 import { VoiceControls } from "@/components/voice/VoiceControls";
+import { KeyboardShortcutsModal } from "@/components/shared/KeyboardShortcutsModal";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import type { Guild } from "@/types";
 import { VoiceCallProvider } from "@/context/GlobalVoiceCallContext";
 import { MockDataProvider } from "@/context/MockDataProvider";
@@ -20,6 +22,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoading, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const { showModal, setShowModal } = useKeyboardShortcuts();
   const [guilds, setGuilds] = useState<Guild[]>([]);
   const [selectedGuildId, setSelectedGuildId] = useState<string>();
   const [isLoadingGuilds, setIsLoadingGuilds] = useState(true);
@@ -34,14 +37,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       return;
     }
     // TODO: replace with API call to GET /guilds
-    setGuilds(mockGuilds);
-    if (mockGuilds.length > 0) {
-      const firstGuild = mockGuilds[0];
-      const firstTextChannel = firstGuild.channels.find((c) => c.type === "TEXT");
-      setSelectedGuildId(firstGuild.id);
-      if (firstTextChannel) router.push(`/guilds/${firstGuild.id}/${firstTextChannel.id}`);
-    }
-    setIsLoadingGuilds(false);
+    Promise.resolve().then(() => {
+      setGuilds(mockGuilds);
+      if (mockGuilds.length > 0) {
+        const firstGuild = mockGuilds[0];
+        const firstTextChannel = firstGuild.channels.find((c) => c.type === "TEXT");
+        setSelectedGuildId(firstGuild.id);
+        if (firstTextChannel) router.push(`/guilds/${firstGuild.id}/${firstTextChannel.id}`);
+      }
+      setIsLoadingGuilds(false);
+    });
   }, [user, isLoading, router]);
 
   const handleCreateGuild = async (name: string, guildType: "HOUSE" | "CRIB") => {
@@ -58,8 +63,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   };
 
   const handleSelectGuild = (guildId: string) => {
+    if (!guildId) {
+      // DM button clicked - navigate to friends/DM page
+      router.push("/channels/me");
+      return;
+    }
     setSelectedGuildId(guildId);
-    if (!guildId) { router.push("/channels/me"); return; }
     const guild = guilds.find((g) => g.id === guildId);
     const firstTextChannel = guild?.channels.find((c) => c.type === "TEXT");
     router.push(firstTextChannel ? `/guilds/${guildId}/${firstTextChannel.id}` : `/guilds/${guildId}`);
@@ -79,7 +88,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     setIsDeafened(false);
   };
 
-  if (isLoading) {
+  if (isLoading || isLoadingGuilds) {
     return (
       <div className="app-loading">
         <p className="app-loading-text">Loading…</p>
@@ -132,6 +141,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {!isOnDMPage && <ChannelSidebar bottomSlot={bottomSlot} onJoinVoice={handleJoinVoice} />}
           <main className="app-main">{children}</main>
         </div>
+        <KeyboardShortcutsModal isOpen={showModal} onClose={() => setShowModal(false)} />
       </VoiceCallProvider>
     </MockDataProvider>
   );

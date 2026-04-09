@@ -13,4 +13,8 @@ export const dmApi = {
   getMessages: (userId: string) => api.get<Message[]>(`/dms/${userId}/messages`),
   sendMessage: (userId: string, content: string) =>
     api.post<Message>(`/dms/${userId}/messages`, { content }),
+  editMessage: (messageId: string, content: string) =>
+    api.patch<Message>(`/messages/${messageId}`, { content }),
+  deleteMessage: (messageId: string) =>
+    api.delete<void>(`/messages/${messageId}`),
 };

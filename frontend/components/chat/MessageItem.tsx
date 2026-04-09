@@ -3,7 +3,7 @@ import { Edit2, Trash2, Check, X } from "lucide-react";
 import type { Message } from "@/types";
 import { Avatar } from "@/components/shared/Avatar";
 import { MessageAttachments } from "./MessageAttachments";
-import { RichText } from "./RichText";
+import { MarkdownRenderer } from "./MarkdownRenderer";
 
 interface MessageItemProps {
   message: Message;
@@ -138,7 +138,7 @@ export default function MessageItem({ message, currentUserId, hideUserInfo = fal
         ) : (
           <>
             <div style={{ fontSize: 15, color: "var(--text-secondary)", lineHeight: 1.55, wordBreak: "break-word", whiteSpace: "pre-wrap" }}>
-              <RichText content={message.content} />
+              <MarkdownRenderer content={message.content} />
             </div>
             {message.attachments && message.attachments.length > 0 && (
               <MessageAttachments attachments={message.attachments} />

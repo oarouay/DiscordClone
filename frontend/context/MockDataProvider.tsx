@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from "react";
 import type { Member, Role } from "@/types";
 import { mockMembers, mockRoles, mockVoiceChannelMembers, mockMemberVoiceStates } from "@/lib/mock";
 
@@ -45,7 +45,15 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
   const [bannedMembers, setBannedMembers] = useState<Member[]>([]);
   const [memberVoiceStates, setMemberVoiceStates] = useState(mockMemberVoiceStates);
   const [memberTimeouts, setMemberTimeouts] = useState<Record<string, string | null>>({});
-  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set(["Rooms", "Calls"]);
+    try {
+      const saved = localStorage.getItem("collapsedCategories");
+      return saved ? new Set(JSON.parse(saved)) : new Set(["Rooms", "Calls"]);
+    } catch {
+      return new Set(["Rooms", "Calls"]);
+    }
+  });
 
   const updateMemberRoles = useCallback((memberId: string, roleIds: string[]) => {
     setMembers((prev) =>

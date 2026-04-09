@@ -47,7 +47,7 @@ export function ChannelSidebar({
   }
 
   return (
-    <>
+    <div className="channel-sidebar">
       <ChannelList
         channels={guild.channels}
         guildId={guild.id}
@@ -62,6 +62,6 @@ export function ChannelSidebar({
       {showInvite && (
         <InviteModal guildId={guild.id} guildName={guild.name} onClose={() => setShowInvite(false)} />
       )}
-    </>
+    </div>
   );
 }
