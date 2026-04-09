@@ -26,6 +26,7 @@ export default function DirectMessagesPage() {
   const [outgoingRequests, setOutgoingRequests] = useState<FriendRequestResponse[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const [searchResults, setSearchResults] = useState<User[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [isRefreshingSocial, setIsRefreshingSocial] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isDeafened, setIsDeafened] = useState(false);
@@ -79,18 +80,25 @@ export default function DirectMessagesPage() {
   useEffect(() => {
     const normalized = searchValue.trim();
     if (normalized.length < 2) {
-      if (searchResults.length > 0) setSearchResults([]);
+      setSearchResults([]);
+      setIsSearching(false);
       return;
     }
+
+    setIsSearching(true);
 
     const timeoutId = setTimeout(() => {
       friendsApi.searchUsers(normalized)
         .then((results) => setSearchResults(results))
-        .catch(() => setSearchResults([]));
+        .catch(() => setSearchResults([]))
+        .finally(() => setIsSearching(false));
     }, 250);
 
-    return () => clearTimeout(timeoutId);
-  }, [searchValue, searchResults.length]);
+    return () => {
+      clearTimeout(timeoutId);
+      setIsSearching(false);
+    };
+  }, [searchValue]);
 
   const handleSendFriendRequest = async (targetUserId: string) => {
     await friendsApi.sendRequest(targetUserId);
@@ -134,6 +142,7 @@ export default function DirectMessagesPage() {
             searchValue={searchValue}
             onSearchValueChange={setSearchValue}
             searchResults={searchResults}
+            isSearching={isSearching}
             outgoingRequests={outgoingRequests}
             incomingRequests={incomingRequests}
             onSendRequest={handleSendFriendRequest}

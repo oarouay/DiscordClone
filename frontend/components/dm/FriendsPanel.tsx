@@ -8,6 +8,7 @@ type FriendsPanelProps = {
   searchValue: string;
   onSearchValueChange: (value: string) => void;
   searchResults: User[];
+  isSearching?: boolean;
   outgoingRequests: FriendRequestResponse[];
   incomingRequests: FriendRequestResponse[];
   onSendRequest: (targetUserId: string) => void;
@@ -20,6 +21,7 @@ export function FriendsPanel({
   searchValue,
   onSearchValueChange,
   searchResults,
+  isSearching = false,
   outgoingRequests,
   incomingRequests,
   onSendRequest,
@@ -32,6 +34,8 @@ export function FriendsPanel({
     [outgoingRequests]
   );
 
+  const showResults = searchValue.trim().length > 0;
+
   return (
     <div style={{ padding: "10px 10px 8px", borderBottom: "1px solid var(--border)", display: "grid", gap: 8 }}>
       <input
@@ -42,9 +46,13 @@ export function FriendsPanel({
         style={{ fontSize: 12, padding: "8px 10px" }}
       />
 
-      {searchValue.trim().length > 0 && (
+      {showResults && (
         <div style={{ maxHeight: 140, overflowY: "auto", display: "grid", gap: 6 }}>
-          {searchResults.length === 0 ? (
+          {isSearching ? (
+            <p style={{ fontSize: 11, color: "var(--text-muted)", padding: "2px 2px" }}>
+              Searching…
+            </p>
+          ) : searchResults.length === 0 ? (
             <p style={{ fontSize: 11, color: "var(--text-muted)", padding: "2px 2px" }}>
               No users found.
             </p>
