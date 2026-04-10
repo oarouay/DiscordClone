@@ -2,40 +2,47 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { UserPlus, Check, X as XIcon, Clock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { useAuth } from "@/context/AuthContext";
+import { useDMContext } from "@/context/DMContext";
 import { DMSidebar } from "@/components/dm/DMSidebar";
 import { UserPanel } from "@/components/shared/UserPanel";
 import { VoiceControls } from "@/components/voice/VoiceControls";
-import { dmApi } from "@/lib/dms";
-import { friendsApi, type FriendResponse, type FriendRequestResponse } from "@/lib/friends";
+import { friendsApi } from "@/lib/friends";
 import { FriendsPanel } from "@/components/dm/FriendsPanel";
-import type { Message, User } from "@/types";
+import type { Message } from "@/types";
 
 const MOCK_RICH_PRESENCE = { activity: "Playing Elden Ring", detail: "Exploring Limgrave • 2h 14m" };
 
 export default function DirectMessagesPage() {
   const router = useRouter();
   const { user, token } = useAuth();
-  const [conversations, setConversations] = useState<User[]>([]);
-  const [friends, setFriends] = useState<FriendResponse[]>([]);
-  const [incomingRequests, setIncomingRequests] = useState<FriendRequestResponse[]>([]);
-  const [outgoingRequests, setOutgoingRequests] = useState<FriendRequestResponse[]>([]);
+  
+  const {
+    conversations,
+    friends,
+    incomingRequests,
+    outgoingRequests,
+    isRefreshingSocial,
+    refreshSocialData,
+    isInitialLoadDone,
+  } = useDMContext();
+  
   const [searchValue, setSearchValue] = useState("");
-  const [searchResults, setSearchResults] = useState<User[]>([]);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [isRefreshingSocial, setIsRefreshingSocial] = useState(false);
   const [friendRequestError, setFriendRequestError] = useState("");
   const [isMuted, setIsMuted] = useState(false);
   const [isDeafened, setIsDeafened] = useState(false);
   const [activeTab, setActiveTab] = useState<"friends" | "pending" | "add">("friends");
+  
+  const initialLoadDoneRef = useRef(false);
 
   const { isConnected, authenticate } = useWebSocket({
     onMessage: (message: Message) => {
-      // Just refresh conversations when new messages arrive
       const incomingUserId = message.channelId.replace("dm_", "");
       if (incomingUserId && !conversations.some(c => c.id === incomingUserId)) {
         refreshSocialData().catch(() => {});
@@ -49,34 +56,13 @@ export default function DirectMessagesPage() {
     }
   }, [isConnected, token, authenticate]);
 
-  const refreshSocialData = useCallback(async () => {
-    setIsRefreshingSocial(true);
-    try {
-      const [conversationResponse, friendsList, incoming, outgoing] = await Promise.all([
-        dmApi.listConversations(),
-        friendsApi.listFriends(),
-        friendsApi.listIncomingRequests(),
-        friendsApi.listOutgoingRequests(),
-      ]);
-
-      setConversations(conversationResponse.map((item) => item.user));
-      setFriends(friendsList);
-      setIncomingRequests(incoming);
-      setOutgoingRequests(outgoing);
-    } finally {
-      setIsRefreshingSocial(false);
-    }
-  }, []);
-
   useEffect(() => {
-    if (!user) return;
+    if (!user || initialLoadDoneRef.current || isInitialLoadDone) return;
+    initialLoadDoneRef.current = true;
     refreshSocialData().catch(() => {
-      setConversations([]);
-      setFriends([]);
-      setIncomingRequests([]);
-      setOutgoingRequests([]);
+      console.error("Initial social data load failed");
     });
-  }, [user, refreshSocialData]);
+  }, [user, isInitialLoadDone, refreshSocialData]);
 
   useEffect(() => {
     setFriendRequestError("");
@@ -118,13 +104,21 @@ export default function DirectMessagesPage() {
   };
 
   const handleAcceptRequest = async (requestId: string) => {
-    await friendsApi.acceptRequest(requestId);
-    await refreshSocialData();
+    try {
+      await friendsApi.acceptRequest(requestId);
+      await refreshSocialData();
+    } catch (err) {
+      console.error("Failed to accept request:", err);
+    }
   };
 
   const handleDeclineRequest = async (requestId: string) => {
-    await friendsApi.declineRequest(requestId);
-    await refreshSocialData();
+    try {
+      await friendsApi.declineRequest(requestId);
+      await refreshSocialData();
+    } catch (err) {
+      console.error("Failed to decline request:", err);
+    }
   };
 
   const bottomSlot = user ? (
@@ -167,9 +161,7 @@ export default function DirectMessagesPage() {
         bottomSlot={bottomSlot}
       />
 
-      {/* Main friends panel content */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", background: "var(--bg-primary)" }}>
-        {/* Tabs header */}
         <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border)", display: "flex", gap: "8px" }}>
           <button
             onClick={() => setActiveTab("friends")}
@@ -222,7 +214,6 @@ export default function DirectMessagesPage() {
           </button>
         </div>
 
-        {/* Content area */}
         <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px" }}>
           {activeTab === "friends" ? (
             friends.length === 0 ? (
