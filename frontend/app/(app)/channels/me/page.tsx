@@ -516,14 +516,6 @@ export default function DirectMessagesPage() {
           )}
         </div>
       </div>
-
-      <VoiceControls
-        isMuted={isMuted}
-        isDeafened={isDeafened}
-        onToggleMute={() => setIsMuted((m) => !m)}
-        onToggleDeafen={() => setIsDeafened((d) => !d)}
-        onLeave={() => {}}
-      />
     </div>
   );
 }
