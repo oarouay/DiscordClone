@@ -65,10 +65,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     setSelectedGuildId(newGuild.id);
   };
 
-  const handleSelectGuild = (guildId: string) => {
+    const handleSelectGuild = (guildId: string) => {
     if (!guildId) {
-      // DM button clicked - navigate to friends/DM page
-      router.push("/channels/me");
+      if (!pathname.startsWith("/channels/me")) {
+        router.push("/channels/me");
+      }
       return;
     }
     setSelectedGuildId(guildId);
