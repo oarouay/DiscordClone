@@ -36,18 +36,21 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       router.replace("/login");
       return;
     }
-    // TODO: replace with API call to GET /guilds
     Promise.resolve().then(() => {
       setGuilds(mockGuilds);
       if (mockGuilds.length > 0) {
         const firstGuild = mockGuilds[0];
         const firstTextChannel = firstGuild.channels.find((c) => c.type === "TEXT");
         setSelectedGuildId(firstGuild.id);
-        if (firstTextChannel) router.push(`/guilds/${firstGuild.id}/${firstTextChannel.id}`);
+        const isGuildRoute = /^\/guilds\/\w+/.test(pathname);
+        const isDMRoute = pathname.startsWith("/channels/me");
+        if (!isGuildRoute && !isDMRoute && firstTextChannel) {
+          router.push(`/guilds/${firstGuild.id}/${firstTextChannel.id}`);
+        }
       }
       setIsLoadingGuilds(false);
     });
-  }, [user, isLoading, router]);
+  }, [user, isLoading, router, pathname]);
 
   const handleCreateGuild = async (name: string, guildType: "HOUSE" | "CRIB") => {
     // TODO: replace with API call to POST /guilds
