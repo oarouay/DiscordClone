@@ -80,7 +80,7 @@ export default function DirectMessagePage() {
 
     if (messagesLoadedRef.current.has(userId)) {
       const cached = getMessages(userId);
-      if (cached && cached.length > 0) {
+      if (cached !== null && cached !== undefined) {
         setLocalMessages(cached);
         setIsLoadingCurrentMessages(false);
         return;
@@ -98,7 +98,8 @@ export default function DirectMessagePage() {
         clearTimeout(loadingTimeoutRef.current);
         loadingTimeoutRef.current = null;
       }
-      setLocalMessages(msgs);
+      setLocalMessages(msgs ?? []);
+      setMessages(userId, msgs ?? []);
       setIsLoadingCurrentMessages(false);
     });
   }, [userId, isInitialLoadDone, getMessages, loadMessages]);
@@ -294,9 +295,6 @@ export default function DirectMessagePage() {
 
   const outgoingTargetIds = new Set(outgoingRequests.map(r => r.receiver.id));
 
-  const hasMessages = messages.length > 0;
-  const showEmptyState = hasMessages === false && !isLoadingCurrentMessages;
-
   return (
     <div style={{ flex: 1, display: "flex", overflow: "hidden", position: "relative" }}>
       <DMSidebar
@@ -376,35 +374,36 @@ export default function DirectMessagePage() {
 
           {isLoadingCurrentMessages ? (
             <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <div style={{ textAlign: "center" }}>
-                <p style={{ color: "var(--text-muted)" }}>Loading messages...</p>
-              </div>
-            </div>
-          ) : showEmptyState ? (
-            <div className="empty-state" style={{ flex: 1 }}>
-              <MessageCircle size={52} style={{ opacity: 0.2 }} />
-              <span
-                style={{
-                  fontFamily: "var(--font-display, 'Rajdhani', sans-serif)",
-                  fontSize: 20,
-                  fontWeight: 700,
-                  color: "var(--text-secondary)",
-                }}
-              >
-                Start the conversation
-              </span>
-              <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
-                Be the first to send a message.
-              </span>
+              <p style={{ color: "var(--text-muted)" }}>Loading messages...</p>
             </div>
           ) : (
             <>
-              <MessageList
-                messages={messages}
-                currentUserId={user?.id}
-                onEdit={handleEditMessage}
-                onDelete={handleDeleteMessage}
-              />
+              {messages.length === 0 && (
+                <div className="empty-state" style={{ flex: 1 }}>
+                  <MessageCircle size={52} style={{ opacity: 0.2 }} />
+                  <span
+                    style={{
+                      fontFamily: "var(--font-display, 'Rajdhani', sans-serif)",
+                      fontSize: 20,
+                      fontWeight: 700,
+                      color: "var(--text-secondary)",
+                    }}
+                  >
+                    Start the conversation
+                  </span>
+                  <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                    Be the first to send a message.
+                  </span>
+                </div>
+              )}
+              {messages.length > 0 && (
+                <MessageList
+                  messages={messages}
+                  currentUserId={user?.id}
+                  onEdit={handleEditMessage}
+                  onDelete={handleDeleteMessage}
+                />
+              )}
               <MessageInput channelName={selectedUser.displayName} onSend={handleSendMessage} />
             </>
           )}
