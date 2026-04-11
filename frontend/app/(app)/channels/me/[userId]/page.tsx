@@ -302,21 +302,6 @@ export default function DirectMessagePage() {
         selectedUserId={userId}
         onSelectUser={(id) => router.push(`/channels/me/${id}`)}
         isConnected={isConnected}
-        topSlot={
-          <FriendsPanel
-            searchValue={searchValue}
-            onSearchValueChange={setSearchValue}
-            searchResults={searchResults}
-            isSearching={isSearching}
-            friendRequestError={friendRequestError}
-            outgoingRequests={outgoingRequests}
-            incomingRequests={incomingRequests}
-            onSendRequest={handleSendFriendRequest}
-            onAcceptRequest={handleAcceptRequest}
-            onDeclineRequest={handleDeclineRequest}
-            isBusy={isRefreshingSocial}
-          />
-        }
         bottomSlot={bottomSlot}
       />
 

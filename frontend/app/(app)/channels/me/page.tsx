@@ -12,7 +12,6 @@ import { DMSidebar } from "@/components/dm/DMSidebar";
 import { UserPanel } from "@/components/shared/UserPanel";
 import { VoiceControls } from "@/components/voice/VoiceControls";
 import { friendsApi } from "@/lib/friends";
-import { FriendsPanel } from "@/components/dm/FriendsPanel";
 import type { Message } from "@/types";
 
 const MOCK_RICH_PRESENCE = { activity: "Playing Elden Ring", detail: "Exploring Limgrave • 2h 14m" };
@@ -143,21 +142,6 @@ export default function DirectMessagesPage() {
         conversations={conversations}
         onSelectUser={(id) => router.push(`/channels/me/${id}`)}
         isConnected={isConnected}
-        topSlot={
-          <FriendsPanel
-            searchValue={searchValue}
-            onSearchValueChange={setSearchValue}
-            searchResults={searchResults}
-            isSearching={isSearching}
-            friendRequestError={friendRequestError}
-            outgoingRequests={outgoingRequests}
-            incomingRequests={incomingRequests}
-            onSendRequest={handleSendFriendRequest}
-            onAcceptRequest={handleAcceptRequest}
-            onDeclineRequest={handleDeclineRequest}
-            isBusy={isRefreshingSocial}
-          />
-        }
         bottomSlot={bottomSlot}
       />
 
