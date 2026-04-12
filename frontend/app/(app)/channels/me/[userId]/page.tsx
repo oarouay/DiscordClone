@@ -26,7 +26,7 @@ export default function DirectMessagePage() {
   const router = useRouter();
   const userId = params.userId as string;
   
-  const { user, token } = useAuth();
+  const { user, token, logout } = useAuth();
   
   const {
     conversations,
@@ -287,7 +287,7 @@ export default function DirectMessagePage() {
         isDeafened={isDeafened}
         onToggleMute={() => setIsMuted((m) => !m)}
         onToggleDeafen={() => setIsDeafened((d) => !d)}
-        onLogout={() => {}}
+        onLogout={logout}
         onSave={(updates) => { Object.assign(user, updates); }}
       />
     </>

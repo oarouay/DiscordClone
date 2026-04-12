@@ -18,7 +18,7 @@ const MOCK_RICH_PRESENCE = { activity: "Playing Elden Ring", detail: "Exploring 
 
 export default function DirectMessagesPage() {
   const router = useRouter();
-  const { user, token } = useAuth();
+  const { user, token, logout } = useAuth();
   
   const {
     conversations,
@@ -128,7 +128,7 @@ export default function DirectMessagesPage() {
       isDeafened={isDeafened}
       onToggleMute={() => setIsMuted((m) => !m)}
       onToggleDeafen={() => setIsDeafened((d) => !d)}
-      onLogout={() => {}}
+      onLogout={logout}
       onSave={(updates) => { Object.assign(user, updates); }}
     />
   ) : null;
