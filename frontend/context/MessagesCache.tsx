@@ -96,9 +96,6 @@ export function MessagesCacheProvider({ children }: { children: ReactNode }) {
 
   const loadMessages = async (userId: string): Promise<Message[]> => {
     const cached = messageCacheRef.current.get(userId);
-    if (cached !== undefined) {
-      return cached;
-    }
 
     loadingStatesRef.current.set(userId, true);
     forceRender({});
@@ -116,10 +113,11 @@ export function MessagesCacheProvider({ children }: { children: ReactNode }) {
       return messages;
     } catch (error) {
       console.error("Failed to load messages:", error);
-      messageCacheRef.current.set(userId, []);
+      const fallback = cached ?? [];
+      messageCacheRef.current.set(userId, fallback);
       loadingStatesRef.current.set(userId, false);
       forceRender({});
-      return [];
+      return fallback;
     }
   };
 

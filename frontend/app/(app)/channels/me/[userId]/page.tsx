@@ -70,12 +70,8 @@ export default function DirectMessagePage() {
     previousUserIdRef.current = userId;
 
     const cached = getMessages(userId);
-
     if (cached !== null && cached !== undefined) {
       setLocalMessages(cached);
-      setMessages(userId, cached);
-      setIsLoadingCurrentMessages(false);
-      return;
     }
 
     setIsLoadingCurrentMessages(true);
