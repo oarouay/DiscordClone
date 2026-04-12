@@ -3,7 +3,7 @@
 import type { Message } from "@/types";
 import { MessageCircle } from "lucide-react";
 import MessageItem from "./MessageItem";
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useEffect, useRef } from "react";
 
 interface MessageListProps {
   messages: Message[];
@@ -14,11 +14,33 @@ interface MessageListProps {
 }
 
 export default function MessageList({ messages, isLoading = false, currentUserId, onEdit, onDelete }: MessageListProps) {
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const hasInitialized = useRef(false);
+  const prevCountRef = useRef(0);
+
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    if (!container || messages.length === 0) return;
+
+    if (!hasInitialized.current) {
+      container.scrollTop = container.scrollHeight;
+      hasInitialized.current = true;
+      prevCountRef.current = messages.length;
+      return;
+    }
+
+    if (messages.length > prevCountRef.current) {
+      container.scrollTop = container.scrollHeight;
+    }
+    prevCountRef.current = messages.length;
+  }, [messages]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (messages.length === 0) {
+      hasInitialized.current = false;
+      prevCountRef.current = 0;
+    }
+  }, [messages.length]);
 
   if (isLoading) {
     return (
@@ -61,6 +83,7 @@ export default function MessageList({ messages, isLoading = false, currentUserId
 
   return (
     <div
+      ref={containerRef}
       style={{
         flex: 1,
         overflowY: "auto",
@@ -84,7 +107,6 @@ export default function MessageList({ messages, isLoading = false, currentUserId
           />
         );
       })}
-      <div ref={messagesEndRef} />
     </div>
   );
 }
