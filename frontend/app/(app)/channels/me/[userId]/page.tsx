@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useLayoutEffect, useEffect, useCallback, useRef } from "react";
 import { MessageCircle, Phone } from "lucide-react";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { useAuth } from "@/context/AuthContext";
@@ -63,7 +63,7 @@ export default function DirectMessagePage() {
   
   const previousUserIdRef = useRef<string>("");
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!userId || !isInitialLoadDone) return;
 
     if (userId === previousUserIdRef.current) return;
