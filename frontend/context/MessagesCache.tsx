@@ -44,7 +44,8 @@ export function MessagesCacheProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const getMessages = (userId: string) => {
-    return messageCacheRef.current.get(userId) || null;
+    const cached = messageCacheRef.current.get(userId);
+    return cached !== undefined ? cached : null;
   };
 
   const setMessages = (userId: string, messages: Message[]) => {
@@ -95,7 +96,7 @@ export function MessagesCacheProvider({ children }: { children: ReactNode }) {
 
   const loadMessages = async (userId: string): Promise<Message[]> => {
     const cached = messageCacheRef.current.get(userId);
-    if (cached && cached.length > 0) {
+    if (cached !== undefined) {
       return cached;
     }
 

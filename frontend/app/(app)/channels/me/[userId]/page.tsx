@@ -61,48 +61,30 @@ export default function DirectMessagePage() {
   const dmChannelId = userId ? `dm_${userId}` : "";
   const { initiateCall } = useGlobalVoiceCall();
   
-  const messagesLoadedRef = useRef<Set<string>>(new Set());
   const previousUserIdRef = useRef<string>("");
-  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!userId || !isInitialLoadDone) return;
 
-    if (userId === previousUserIdRef.current) {
+    if (userId === previousUserIdRef.current) return;
+    previousUserIdRef.current = userId;
+
+    const cached = getMessages(userId);
+
+    if (cached !== null && cached !== undefined) {
+      setLocalMessages(cached);
+      setMessages(userId, cached);
       return;
     }
 
-    previousUserIdRef.current = userId;
+    setIsLoadingCurrentMessages(true);
 
-    if (loadingTimeoutRef.current) {
-      clearTimeout(loadingTimeoutRef.current);
-    }
-
-    if (messagesLoadedRef.current.has(userId)) {
-      const cached = getMessages(userId);
-      if (cached !== null && cached !== undefined) {
-        setLocalMessages(cached);
-        setIsLoadingCurrentMessages(false);
-        return;
-      }
-    }
-
-    loadingTimeoutRef.current = setTimeout(() => {
-      setIsLoadingCurrentMessages(true);
-    }, 100);
-
-    messagesLoadedRef.current.add(userId);
-
-    loadMessages(userId).then(msgs => {
-      if (loadingTimeoutRef.current) {
-        clearTimeout(loadingTimeoutRef.current);
-        loadingTimeoutRef.current = null;
-      }
+    loadMessages(userId).then((msgs) => {
       setLocalMessages(msgs ?? []);
       setMessages(userId, msgs ?? []);
       setIsLoadingCurrentMessages(false);
     });
-  }, [userId, isInitialLoadDone, getMessages, loadMessages]);
+  }, [userId, isInitialLoadDone, getMessages, setMessages, loadMessages]);
 
   const { isConnected, send, authenticate } = useWebSocket({
     onMessage: (message: Message) => {
