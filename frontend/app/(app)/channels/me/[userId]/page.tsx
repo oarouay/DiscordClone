@@ -48,7 +48,7 @@ export default function DirectMessagePage() {
   } = useMessagesCache();
   
   const [messages, setLocalMessages] = useState<Message[]>([]);
-  const [isLoadingCurrentMessages, setIsLoadingCurrentMessages] = useState(false);
+  const [isLoadingCurrentMessages, setIsLoadingCurrentMessages] = useState(true);
   const [friendRequestError, setFriendRequestError] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [searchValue, setSearchValue] = useState("");
@@ -74,6 +74,7 @@ export default function DirectMessagePage() {
     if (cached !== null && cached !== undefined) {
       setLocalMessages(cached);
       setMessages(userId, cached);
+      setIsLoadingCurrentMessages(false);
       return;
     }
 
