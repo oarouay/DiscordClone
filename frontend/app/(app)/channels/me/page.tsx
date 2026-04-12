@@ -134,6 +134,7 @@ export default function DirectMessagesPage() {
   ) : null;
 
   const outgoingTargetIds = new Set(outgoingRequests.map(r => r.receiver.id));
+  const friendIds = new Set(friends.map(f => f.user.id));
   const totalPending = incomingRequests.length + outgoingRequests.length;
 
   return (
@@ -430,6 +431,8 @@ export default function DirectMessagesPage() {
                   ) : (
                     searchResults.map((searchUser) => {
                       const alreadyRequested = outgoingTargetIds.has(searchUser.id);
+                      const alreadyFriends = friendIds.has(searchUser.id);
+                      const isDisabled = alreadyRequested || alreadyFriends;
                       return (
                         <div
                           key={searchUser.id}
@@ -468,21 +471,21 @@ export default function DirectMessagesPage() {
                           </div>
                           <button
                             onClick={() => handleSendFriendRequest(searchUser.id)}
-                            disabled={alreadyRequested}
+                            disabled={isDisabled}
                             style={{
                               padding: "8px 12px",
-                              background: alreadyRequested ? "var(--bg-secondary)" : "var(--accent)",
-                              color: alreadyRequested ? "var(--text-muted)" : "#fff",
+                              background: isDisabled ? "var(--bg-secondary)" : "var(--accent)",
+                              color: isDisabled ? "var(--text-muted)" : "#fff",
                               border: "none",
                               borderRadius: "6px",
-                              cursor: alreadyRequested ? "default" : "pointer",
+                              cursor: isDisabled ? "default" : "pointer",
                               fontSize: 12,
                               fontWeight: 600,
                               flexShrink: 0,
                               transition: "all 0.2s",
                             }}
                           >
-                            {alreadyRequested ? "Sent" : "Add"}
+                            {alreadyFriends ? "Friends" : alreadyRequested ? "Sent" : "Add"}
                           </button>
                         </div>
                       );
