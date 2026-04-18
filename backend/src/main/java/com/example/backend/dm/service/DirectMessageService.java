@@ -24,20 +24,20 @@ public class DirectMessageService {
     private final UserRepository userRepository;
     private final FriendService friendService;
     private final FriendshipRepository friendshipRepository;
-    private final org.springframework.context.ApplicationEventPublisher eventPublisher;
+    private final org.springframework.messaging.simp.SimpMessagingTemplate simpMessagingTemplate;
 
     public DirectMessageService(
             DirectMessageRepository directMessageRepository,
             UserRepository userRepository,
             FriendService friendService,
             FriendshipRepository friendshipRepository,
-            org.springframework.context.ApplicationEventPublisher eventPublisher
+            org.springframework.messaging.simp.SimpMessagingTemplate simpMessagingTemplate
     ) {
         this.directMessageRepository = directMessageRepository;
         this.userRepository = userRepository;
         this.friendService = friendService;
         this.friendshipRepository = friendshipRepository;
-        this.eventPublisher = eventPublisher;
+        this.simpMessagingTemplate = simpMessagingTemplate;
     }
 
     @Transactional(readOnly = true)
@@ -90,7 +90,8 @@ public class DirectMessageService {
         DirectMessageEntity saved = directMessageRepository.save(message);
         DirectMessageResponse response = DirectMessageResponse.fromEntity(saved, currentUser, content.trim());
         
-        eventPublisher.publishEvent(new com.example.backend.dm.event.DirectMessageSentEvent(this, response, currentUser.getId(), recipient.getId()));
+        simpMessagingTemplate.convertAndSendToUser(recipient.getId(), "/queue/messages", response);
+        simpMessagingTemplate.convertAndSendToUser(currentUser.getId(), "/queue/messages", response);
         
         return response;
     }
