@@ -52,19 +52,23 @@ public class DirectMessageService {
     }
 
     @Transactional(readOnly = true)
-    public List<DirectMessageResponse> getMessages(UserEntity currentUser, String otherUserId) {
+    public List<DirectMessageResponse> getMessages(UserEntity currentUser, String otherUserId, int page, int size) {
         UserEntity otherUser = userRepository.findById(otherUserId)
                 .orElseThrow(() -> new NotFoundException("DM user not found"));
         ensureFriendship(currentUser.getId(), otherUser.getId());
 
-        return directMessageRepository.findConversation(currentUser.getId(), otherUser.getId())
+        List<DirectMessageResponse> messages = new java.util.ArrayList<>(
+            directMessageRepository.findConversation(currentUser.getId(), otherUser.getId(), org.springframework.data.domain.PageRequest.of(page, size))
                 .stream()
-            .map(message -> DirectMessageResponse.fromEntity(
-                message,
-                currentUser,
-                messageCryptoService.decrypt(message.getContent())
-            ))
-                .toList();
+                .map(message -> DirectMessageResponse.fromEntity(
+                    message,
+                    currentUser,
+                    messageCryptoService.decrypt(message.getContent())
+                ))
+                .toList()
+        );
+        java.util.Collections.reverse(messages);
+        return messages;
     }
 
     @Transactional

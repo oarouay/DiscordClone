@@ -12,6 +12,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -38,9 +39,14 @@ public class DirectMessageController {
     }
 
     @GetMapping("/{userId}/messages")
-    public List<DirectMessageResponse> getMessages(Authentication authentication, @PathVariable String userId) {
+    public List<DirectMessageResponse> getMessages(
+            Authentication authentication, 
+            @PathVariable String userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size
+    ) {
         UserEntity currentUser = authenticatedUserService.getCurrentUser(authentication);
-        return directMessageService.getMessages(currentUser, userId);
+        return directMessageService.getMessages(currentUser, userId, page, size);
     }
 
     @PostMapping("/{userId}/messages")
