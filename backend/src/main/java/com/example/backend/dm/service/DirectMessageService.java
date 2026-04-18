@@ -24,7 +24,6 @@ public class DirectMessageService {
     private final UserRepository userRepository;
     private final FriendService friendService;
     private final FriendshipRepository friendshipRepository;
-    private final MessageCryptoService messageCryptoService;
     private final org.springframework.context.ApplicationEventPublisher eventPublisher;
 
     public DirectMessageService(
@@ -32,14 +31,12 @@ public class DirectMessageService {
             UserRepository userRepository,
             FriendService friendService,
             FriendshipRepository friendshipRepository,
-            MessageCryptoService messageCryptoService,
             org.springframework.context.ApplicationEventPublisher eventPublisher
     ) {
         this.directMessageRepository = directMessageRepository;
         this.userRepository = userRepository;
         this.friendService = friendService;
         this.friendshipRepository = friendshipRepository;
-        this.messageCryptoService = messageCryptoService;
         this.eventPublisher = eventPublisher;
     }
 
@@ -63,7 +60,7 @@ public class DirectMessageService {
                 .map(message -> DirectMessageResponse.fromEntity(
                     message,
                     currentUser,
-                    messageCryptoService.decrypt(message.getContent())
+                    message.getContent()
                 ))
                 .toList()
         );
@@ -86,7 +83,7 @@ public class DirectMessageService {
         message.setId(generateMessageId());
         message.setSender(currentUser);
         message.setRecipient(recipient);
-        message.setContent(messageCryptoService.encrypt(content.trim()));
+        message.setContent(content.trim());
         message.setCreatedAt(Instant.now());
         message.setEditedAt(null);
 
@@ -119,7 +116,7 @@ public class DirectMessageService {
         return new DirectMessageConversationResponse(
                 "dm_" + otherUserId,
                 friend.user(),
-            latestMessage.map(DirectMessageEntity::getContent).map(messageCryptoService::decrypt).orElse(null),
+                latestMessage.map(DirectMessageEntity::getContent).orElse(null),
                 latestMessage.map(DirectMessageEntity::getCreatedAt).orElse(null)
         );
     }

@@ -1,7 +1,7 @@
 package com.example.backend.dm.model;
 
 import com.example.backend.user.model.UserEntity;
-import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
@@ -25,7 +25,8 @@ public class DirectMessageEntity {
     @JoinColumn(name = "recipient_id", nullable = false)
     private UserEntity recipient;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Convert(converter = EncryptedStringConverter.class)
+    @jakarta.persistence.Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
     @Column(nullable = false)
