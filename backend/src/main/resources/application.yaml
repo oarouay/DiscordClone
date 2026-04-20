@@ -14,7 +14,7 @@ spring:
     open-in-view: false
   data:
     redis:
-      url: rediss://default:AZ3zAAIncDEyNjMzYzlhZDcxZTE0MDczYjNiMmFhY2YzZDc4NjMxN3AxNDA0MzU@grand-raven-40435.upstash.io:6379
+      url: ${REDIS_URL}
 
 app:
   jwt:
