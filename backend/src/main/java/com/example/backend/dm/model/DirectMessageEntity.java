@@ -1,6 +1,7 @@
 package com.example.backend.dm.model;
 
 import com.example.backend.user.model.UserEntity;
+import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;

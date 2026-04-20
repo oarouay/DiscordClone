@@ -34,6 +34,7 @@ public class MessageCryptoService {
         byte[] normalized = new byte[32];
         System.arraycopy(keyBytes, 0, normalized, 0, 32);
         this.secretKey = new SecretKeySpec(normalized, "AES");
+        com.example.backend.dm.model.EncryptedStringConverter.setCryptoService(this);
     }
 
     public String encrypt(String clearText) {
