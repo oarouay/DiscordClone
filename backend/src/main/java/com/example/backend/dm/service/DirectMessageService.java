@@ -24,20 +24,20 @@ public class DirectMessageService {
     private final UserRepository userRepository;
     private final FriendService friendService;
     private final FriendshipRepository friendshipRepository;
-    private final org.springframework.messaging.simp.SimpMessagingTemplate simpMessagingTemplate;
+    private final com.example.backend.realtime.RedisMessagePublisher redisMessagePublisher;
 
     public DirectMessageService(
             DirectMessageRepository directMessageRepository,
             UserRepository userRepository,
             FriendService friendService,
             FriendshipRepository friendshipRepository,
-            org.springframework.messaging.simp.SimpMessagingTemplate simpMessagingTemplate
+            com.example.backend.realtime.RedisMessagePublisher redisMessagePublisher
     ) {
         this.directMessageRepository = directMessageRepository;
         this.userRepository = userRepository;
         this.friendService = friendService;
         this.friendshipRepository = friendshipRepository;
-        this.simpMessagingTemplate = simpMessagingTemplate;
+        this.redisMessagePublisher = redisMessagePublisher;
     }
 
     @Transactional(readOnly = true)
@@ -113,8 +113,8 @@ public class DirectMessageService {
         DirectMessageResponse senderResponse = DirectMessageResponse.fromEntity(saved, currentUser, content.trim());
         DirectMessageResponse recipientResponse = DirectMessageResponse.fromEntity(saved, recipient, content.trim());
         
-        simpMessagingTemplate.convertAndSendToUser(currentUser.getId(), "/queue/messages", senderResponse);
-        simpMessagingTemplate.convertAndSendToUser(recipient.getId(), "/queue/messages", recipientResponse);
+        redisMessagePublisher.publishMessage(currentUser.getId(), senderResponse);
+        redisMessagePublisher.publishMessage(recipient.getId(), recipientResponse);
         
         return senderResponse;
     }
