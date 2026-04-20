@@ -36,7 +36,6 @@ export function DMProvider({ children }: { children: ReactNode }) {
         setFriends(data.friends || []);
         setIncomingRequests(data.incomingRequests || []);
         setOutgoingRequests(data.outgoingRequests || []);
-        setIsInitialLoadDone(true);
       } catch (e) {
         console.error("Failed to load cache:", e);
       }
