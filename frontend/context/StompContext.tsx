@@ -24,20 +24,18 @@ const resolveStompUrl = () => {
     return process.env.NEXT_PUBLIC_STOMP_URL;
   }
 
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    try {
-      const api = new URL(process.env.NEXT_PUBLIC_API_URL);
-      api.protocol = api.protocol === "https:" ? "https:" : "http:";
-      api.pathname = api.pathname.replace(/\/?api\/?$/, "") + "/ws-stomp";
-      return api.toString();
-    } catch {
-      // Fall through to browser/default fallback.
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8081/api";
+  
+  try {
+    const api = new URL(apiUrl);
+    api.protocol = api.protocol === "https:" ? "https:" : "http:";
+    api.pathname = api.pathname.replace(/\/?api\/?$/, "") + "/ws-stomp";
+    return api.toString();
+  } catch {
+    if (typeof window !== "undefined") {
+      const protocol = window.location.protocol === "https:" ? "https:" : "http:";
+      return `${protocol}//${window.location.host}/ws-stomp`;
     }
-  }
-
-  if (typeof window !== "undefined") {
-    const protocol = window.location.protocol === "https:" ? "https:" : "http:";
-    return `${protocol}//${window.location.host}/ws-stomp`;
   }
 
   return "http://localhost:8081/ws-stomp";

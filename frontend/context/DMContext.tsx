@@ -36,7 +36,6 @@ export function DMProvider({ children }: { children: ReactNode }) {
         setFriends(data.friends || []);
         setIncomingRequests(data.incomingRequests || []);
         setOutgoingRequests(data.outgoingRequests || []);
-        setIsInitialLoadDone(true);
       } catch (e) {
         console.error("Failed to load cache:", e);
       }
@@ -74,6 +73,7 @@ export function DMProvider({ children }: { children: ReactNode }) {
       console.error("Failed to refresh social data:", error);
     } finally {
       setIsRefreshingSocial(false);
+      setIsInitialLoadDone(true);
       isRefreshingRef.current = false;
     }
   }, []);

@@ -24,27 +24,48 @@ public class DirectMessageService {
     private final UserRepository userRepository;
     private final FriendService friendService;
     private final FriendshipRepository friendshipRepository;
-    private final org.springframework.messaging.simp.SimpMessagingTemplate simpMessagingTemplate;
+    private final com.example.backend.realtime.RedisMessagePublisher redisMessagePublisher;
 
     public DirectMessageService(
             DirectMessageRepository directMessageRepository,
             UserRepository userRepository,
             FriendService friendService,
             FriendshipRepository friendshipRepository,
-            org.springframework.messaging.simp.SimpMessagingTemplate simpMessagingTemplate
+            com.example.backend.realtime.RedisMessagePublisher redisMessagePublisher
     ) {
         this.directMessageRepository = directMessageRepository;
         this.userRepository = userRepository;
         this.friendService = friendService;
         this.friendshipRepository = friendshipRepository;
-        this.simpMessagingTemplate = simpMessagingTemplate;
+        this.redisMessagePublisher = redisMessagePublisher;
     }
 
     @Transactional(readOnly = true)
     public List<DirectMessageConversationResponse> listConversations(UserEntity currentUser) {
-        return friendService.getFriends(currentUser)
+        List<FriendResponse> friends = friendService.getFriends(currentUser);
+        
+        java.util.Map<String, DirectMessageEntity> latestMessagesByFriend = directMessageRepository
+                .findLatestMessagesForUser(currentUser.getId())
                 .stream()
-                .map(friend -> toConversationResponse(currentUser, friend))
+                .collect(java.util.stream.Collectors.toMap(
+                        msg -> msg.getSender().getId().equals(currentUser.getId()) 
+                                ? msg.getRecipient().getId() 
+                                : msg.getSender().getId(),
+                        msg -> msg,
+                        (existing, replacement) -> existing
+                ));
+
+        return friends.stream()
+                .map(friend -> {
+                    String otherUserId = friend.user().id();
+                    DirectMessageEntity latestMessage = latestMessagesByFriend.get(otherUserId);
+                    return new DirectMessageConversationResponse(
+                            "dm_" + otherUserId,
+                            friend.user(),
+                            latestMessage != null ? latestMessage.getContent() : null,
+                            latestMessage != null ? latestMessage.getCreatedAt() : null
+                    );
+                })
                 .toList();
     }
 
@@ -88,12 +109,14 @@ public class DirectMessageService {
         message.setEditedAt(null);
 
         DirectMessageEntity saved = directMessageRepository.save(message);
-        DirectMessageResponse response = DirectMessageResponse.fromEntity(saved, currentUser, content.trim());
         
-        simpMessagingTemplate.convertAndSendToUser(recipient.getId(), "/queue/messages", response);
-        simpMessagingTemplate.convertAndSendToUser(currentUser.getId(), "/queue/messages", response);
+        DirectMessageResponse senderResponse = DirectMessageResponse.fromEntity(saved, currentUser, content.trim());
+        DirectMessageResponse recipientResponse = DirectMessageResponse.fromEntity(saved, recipient, content.trim());
         
-        return response;
+        redisMessagePublisher.publishMessage(currentUser.getId(), senderResponse);
+        redisMessagePublisher.publishMessage(recipient.getId(), recipientResponse);
+        
+        return senderResponse;
     }
 
     @Transactional
@@ -110,17 +133,7 @@ public class DirectMessageService {
         }
     }
 
-    private DirectMessageConversationResponse toConversationResponse(UserEntity currentUser, FriendResponse friend) {
-        String otherUserId = friend.user().id();
-        var latestMessage = directMessageRepository.findLatestBetween(currentUser.getId(), otherUserId);
 
-        return new DirectMessageConversationResponse(
-                "dm_" + otherUserId,
-                friend.user(),
-                latestMessage.map(DirectMessageEntity::getContent).orElse(null),
-                latestMessage.map(DirectMessageEntity::getCreatedAt).orElse(null)
-        );
-    }
 
     private String generateMessageId() {
         return "dm_" + UUID.randomUUID().toString().replace("-", "").substring(0, 16);

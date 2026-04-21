@@ -78,6 +78,7 @@ public class FriendService {
         return FriendRequestResponse.fromEntity(saved);
     }
 
+    @org.springframework.cache.annotation.CacheEvict(value = "friends", key = "#receiver.id")
     @Transactional
     public FriendRequestResponse acceptRequest(UserEntity receiver, String requestId) {
         FriendRequestEntity request = friendRequestRepository.findByIdAndReceiverId(requestId, receiver.getId())
@@ -142,6 +143,7 @@ public class FriendService {
                 .toList();
     }
 
+    @org.springframework.cache.annotation.Cacheable(value = "friends", key = "#user.id")
     @Transactional(readOnly = true)
     public List<FriendResponse> getFriends(UserEntity user) {
         return friendshipRepository.findAllByUserOneIdOrUserTwoIdOrderByCreatedAtDesc(user.getId(), user.getId())
@@ -155,6 +157,7 @@ public class FriendService {
                 .toList();
     }
 
+    @org.springframework.cache.annotation.CacheEvict(value = "friends", key = "#user.id")
     @Transactional
     public void removeFriend(UserEntity user, String friendUserId) {
         UserEntity friend = userRepository.findById(friendUserId)

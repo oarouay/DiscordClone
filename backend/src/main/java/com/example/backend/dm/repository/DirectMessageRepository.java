@@ -28,4 +28,18 @@ public interface DirectMessageRepository extends JpaRepository<DirectMessageEnti
             limit 1
             """)
     Optional<DirectMessageEntity> findLatestBetween(@Param("userA") String userA, @Param("userB") String userB);
+
+    @Query(value = """
+            select distinct on (
+                case when sender_id < recipient_id then sender_id else recipient_id end,
+                case when sender_id < recipient_id then recipient_id else sender_id end
+            ) *
+            from direct_messages
+            where sender_id = :userId or recipient_id = :userId
+            order by 
+                case when sender_id < recipient_id then sender_id else recipient_id end,
+                case when sender_id < recipient_id then recipient_id else sender_id end,
+                created_at desc
+            """, nativeQuery = true)
+    List<DirectMessageEntity> findLatestMessagesForUser(@Param("userId") String userId);
 }
