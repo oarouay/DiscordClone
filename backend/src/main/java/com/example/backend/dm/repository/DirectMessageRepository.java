@@ -4,12 +4,14 @@ import com.example.backend.dm.model.DirectMessageEntity;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface DirectMessageRepository extends JpaRepository<DirectMessageEntity, String> {
 
+    @EntityGraph(attributePaths = {"sender", "recipient"})
     @Query("""
             select m from DirectMessageEntity m
             where (m.sender.id = :userA and m.recipient.id = :userB)
@@ -18,6 +20,7 @@ public interface DirectMessageRepository extends JpaRepository<DirectMessageEnti
             """)
     List<DirectMessageEntity> findConversation(@Param("userA") String userA, @Param("userB") String userB, Pageable pageable);
 
+    @EntityGraph(attributePaths = {"sender", "recipient"})
     @Query("""
             select m from DirectMessageEntity m
             where (
