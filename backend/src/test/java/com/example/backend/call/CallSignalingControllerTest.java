@@ -23,11 +23,14 @@ public class CallSignalingControllerTest {
     @Mock
     private CallSessionService callSessionService;
 
+    @Mock
+    private com.example.backend.friend.service.FriendService friendService;
+
     private CallSignalingController controller;
 
     @BeforeEach
     void setUp() {
-        controller = new CallSignalingController(messagingTemplate, callSessionService);
+        controller = new CallSignalingController(messagingTemplate, callSessionService, friendService);
     }
 
     @Test
@@ -54,6 +57,8 @@ public class CallSignalingControllerTest {
         when(principal.getName()).thenReturn("userA");
 
         SimpMessageHeaderAccessor headerAccessor = mock(SimpMessageHeaderAccessor.class);
+        
+        when(friendService.areFriends("userA", "userB")).thenReturn(true);
 
         controller.handleSignal(dto, principal, headerAccessor);
 
@@ -76,6 +81,8 @@ public class CallSignalingControllerTest {
 
         SimpMessageHeaderAccessor headerAccessor = mock(SimpMessageHeaderAccessor.class);
 
+        when(friendService.areFriends("userA", "userB")).thenReturn(true);
+
         controller.handleSignal(dto, principal, headerAccessor);
 
         // Verify session end
@@ -83,5 +90,22 @@ public class CallSignalingControllerTest {
 
         // Verify routing
         verify(messagingTemplate, times(1)).convertAndSendToUser("userB", "/queue/signal", dto);
+    }
+
+    @Test
+    void handleSignal_notFriends_throwsIllegalArgumentException() {
+        SignalingMessageDTO dto = new SignalingMessageDTO();
+        dto.setType(SignalingMessageDTO.Type.CALL_INITIATE);
+        dto.setSenderId("userA");
+        dto.setRecipientId("userB");
+
+        Principal principal = mock(Principal.class);
+        when(principal.getName()).thenReturn("userA");
+
+        SimpMessageHeaderAccessor headerAccessor = mock(SimpMessageHeaderAccessor.class);
+
+        when(friendService.areFriends("userA", "userB")).thenReturn(false);
+
+        assertThrows(IllegalArgumentException.class, () -> controller.handleSignal(dto, principal, headerAccessor));
     }
 }

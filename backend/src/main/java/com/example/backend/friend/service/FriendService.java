@@ -174,6 +174,12 @@ public class FriendService {
         return userAId.compareTo(userBId) < 0 ? userAId + ":" + userBId : userBId + ":" + userAId;
     }
 
+    @Transactional(readOnly = true)
+    public boolean areFriends(String userIdA, String userIdB) {
+        String pairKey = buildPairKey(userIdA, userIdB);
+        return friendshipRepository.findByPairKey(pairKey).isPresent();
+    }
+
     private UserEntity resolveFirstUser(UserEntity userA, UserEntity userB) {
         return userA.getId().compareTo(userB.getId()) < 0 ? userA : userB;
     }

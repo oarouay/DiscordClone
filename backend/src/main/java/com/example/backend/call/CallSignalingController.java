@@ -12,11 +12,12 @@ public class CallSignalingController {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final CallSessionService callSessionService;
-    // private final FriendshipService friendshipService; // Assume injected
+    private final com.example.backend.friend.service.FriendService friendService;
 
-    public CallSignalingController(SimpMessagingTemplate messagingTemplate, CallSessionService callSessionService) {
+    public CallSignalingController(SimpMessagingTemplate messagingTemplate, CallSessionService callSessionService, com.example.backend.friend.service.FriendService friendService) {
         this.messagingTemplate = messagingTemplate;
         this.callSessionService = callSessionService;
+        this.friendService = friendService;
     }
 
     @MessageMapping("/signal")
@@ -26,10 +27,10 @@ public class CallSignalingController {
             throw new SecurityException("Unauthorized: senderId does not match current user");
         }
 
-        // 2. Friendship validation (commented placeholder, assuming it exists)
-        // if (!friendshipService.areFriends(message.getSenderId(), message.getRecipientId())) {
-        //    throw new IllegalArgumentException("Cannot call non-friends");
-        // }
+        // 2. Friendship validation
+        if (!friendService.areFriends(message.getSenderId(), message.getRecipientId())) {
+            throw new IllegalArgumentException("Cannot call non-friends");
+        }
 
         // 3. Handle session state
         switch (message.getType()) {
