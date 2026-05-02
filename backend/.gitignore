@@ -37,3 +37,7 @@ build/
 .env.*
 !.env.example
 
+server.log
+server_err.log
+test*.js
+test*.mjs
