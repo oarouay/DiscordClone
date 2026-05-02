@@ -14,7 +14,7 @@ public record GuildResponse(
 ) {
     public static GuildResponse fromEntity(GuildEntity entity) {
         return new GuildResponse(
-                String.valueOf(entity.getId()),
+                entity.getId(),
                 entity.getName(),
                 entity.getIconUrl(),
                 UserResponse.fromEntity(entity.getOwner()),

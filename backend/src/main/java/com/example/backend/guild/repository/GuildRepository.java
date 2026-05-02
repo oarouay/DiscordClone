@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface GuildRepository extends JpaRepository<GuildEntity, Long> {
+public interface GuildRepository extends JpaRepository<GuildEntity, String> {
     
     @EntityGraph(attributePaths = {"owner"})
     List<GuildEntity> findByOwnerId(String ownerId);

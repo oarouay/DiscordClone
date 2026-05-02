@@ -1,6 +1,6 @@
 package com.example.backend.guild.service;
 
-import com.example.backend.common.util.SnowflakeIdGenerator;
+import java.util.UUID;
 import com.example.backend.guild.model.*;
 import com.example.backend.guild.repository.GuildMemberRepository;
 import com.example.backend.guild.repository.GuildRepository;
@@ -30,7 +30,7 @@ public class GuildService {
     public GuildEntity createGuild(UserEntity owner, String name, String iconUrl) {
         // 1. Create the Guild Base
         GuildEntity guild = new GuildEntity();
-        guild.setId(SnowflakeIdGenerator.generate());
+        guild.setId(UUID.randomUUID().toString());
         guild.setOwner(owner);
         guild.setName(name);
         guild.setIconUrl(iconUrl);
@@ -45,7 +45,7 @@ public class GuildService {
                                  | GuildPermission.SPEAK.getValue();
 
         RoleEntity everyoneRole = new RoleEntity();
-        everyoneRole.setId(SnowflakeIdGenerator.generate());
+        everyoneRole.setId(UUID.randomUUID().toString());
         everyoneRole.setGuild(guild);
         everyoneRole.setName("@everyone");
         everyoneRole.setColor("#99AAB5");
@@ -56,7 +56,7 @@ public class GuildService {
 
         // 3. Generate the exclusive "Owner" Role
         RoleEntity ownerRole = new RoleEntity();
-        ownerRole.setId(SnowflakeIdGenerator.generate());
+        ownerRole.setId(UUID.randomUUID().toString());
         ownerRole.setGuild(guild);
         ownerRole.setName("Owner");
         ownerRole.setColor("#FFD700");
@@ -67,7 +67,7 @@ public class GuildService {
 
         // 4. Bind the Owner as a standard Member but inject both Roles!
         GuildMemberEntity ownerMember = new GuildMemberEntity();
-        ownerMember.setId(SnowflakeIdGenerator.generate());
+        ownerMember.setId(UUID.randomUUID().toString());
         ownerMember.setGuild(guild);
         ownerMember.setUser(owner);
         ownerMember.setJoinedAt(Instant.now());

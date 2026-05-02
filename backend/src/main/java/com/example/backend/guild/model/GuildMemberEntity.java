@@ -11,7 +11,7 @@ import java.util.Set;
 public class GuildMemberEntity {
 
     @Id
-    private Long id; // Snowflake ID mapped typically from the assignment
+    private String id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "guild_id", nullable = false)
@@ -36,8 +36,8 @@ public class GuildMemberEntity {
 
     // Getters and Setters
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
 
     public GuildEntity getGuild() { return guild; }
     public void setGuild(GuildEntity guild) { this.guild = guild; }

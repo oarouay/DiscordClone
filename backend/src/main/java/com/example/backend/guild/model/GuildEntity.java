@@ -11,7 +11,7 @@ import java.util.List;
 public class GuildEntity {
 
     @Id
-    private Long id; // Snowflake ID
+    private String id;
 
     @Column(nullable = false)
     private String name;
@@ -33,8 +33,8 @@ public class GuildEntity {
 
     // Getters and Setters
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }

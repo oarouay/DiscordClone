@@ -7,7 +7,7 @@ import jakarta.persistence.*;
 public class RoleEntity {
 
     @Id
-    private Long id; // Snowflake
+    private String id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "guild_id", nullable = false)
@@ -30,8 +30,8 @@ public class RoleEntity {
 
     // Getters and Setters
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
 
     public GuildEntity getGuild() { return guild; }
     public void setGuild(GuildEntity guild) { this.guild = guild; }

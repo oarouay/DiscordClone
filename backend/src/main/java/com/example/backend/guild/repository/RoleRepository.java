@@ -8,8 +8,8 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface RoleRepository extends JpaRepository<RoleEntity, Long> {
+public interface RoleRepository extends JpaRepository<RoleEntity, String> {
     
     @EntityGraph(attributePaths = {"guild"})
-    List<RoleEntity> findByGuildIdOrderByPositionDesc(Long guildId);
+    List<RoleEntity> findByGuildIdOrderByPositionDesc(String guildId);
 }

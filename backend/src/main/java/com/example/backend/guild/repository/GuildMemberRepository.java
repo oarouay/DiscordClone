@@ -9,14 +9,14 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface GuildMemberRepository extends JpaRepository<GuildMemberEntity, Long> {
+public interface GuildMemberRepository extends JpaRepository<GuildMemberEntity, String> {
     
     @EntityGraph(attributePaths = {"user", "guild", "roles"})
-    List<GuildMemberEntity> findByGuildId(Long guildId);
+    List<GuildMemberEntity> findByGuildId(String guildId);
     
     @EntityGraph(attributePaths = {"user", "guild", "roles"})
     List<GuildMemberEntity> findByUserId(String userId);
     
     @EntityGraph(attributePaths = {"user", "guild", "roles"})
-    Optional<GuildMemberEntity> findByGuildIdAndUserId(Long guildId, String userId);
+    Optional<GuildMemberEntity> findByGuildIdAndUserId(String guildId, String userId);
 }
