@@ -81,4 +81,21 @@ public class GuildService {
 
         return guild;
     }
+
+    @Transactional(readOnly = true)
+    public java.util.List<GuildEntity> listGuildsForUser(UserEntity user) {
+        return guildMemberRepository.findByUserId(user.getId())
+                .stream()
+                .map(GuildMemberEntity::getGuild)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public GuildEntity getGuildDetails(String guildId, UserEntity user) {
+        guildMemberRepository.findByGuildIdAndUserId(guildId, user.getId())
+                .orElseThrow(() -> new com.example.backend.common.exception.NotFoundException("Guild not found or not a member"));
+        
+        return guildRepository.findById(guildId)
+                .orElseThrow(() -> new com.example.backend.common.exception.NotFoundException("Guild not found"));
+    }
 }

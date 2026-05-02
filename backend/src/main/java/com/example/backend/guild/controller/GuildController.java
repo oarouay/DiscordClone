@@ -26,4 +26,19 @@ public class GuildController {
         GuildEntity guild = guildService.createGuild(currentUser, request.name(), request.iconUrl());
         return ResponseEntity.ok(GuildResponse.fromEntity(guild));
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<java.util.List<GuildResponse>> listMyGuilds(
+            @AuthenticationPrincipal UserEntity currentUser) {
+        java.util.List<GuildEntity> guilds = guildService.listGuildsForUser(currentUser);
+        return ResponseEntity.ok(guilds.stream().map(GuildResponse::fromEntity).toList());
+    }
+
+    @GetMapping("/{guildId}")
+    public ResponseEntity<GuildResponse> getGuild(
+            @AuthenticationPrincipal UserEntity currentUser,
+            @PathVariable String guildId) {
+        GuildEntity guild = guildService.getGuildDetails(guildId, currentUser);
+        return ResponseEntity.ok(GuildResponse.fromEntity(guild));
+    }
 }
