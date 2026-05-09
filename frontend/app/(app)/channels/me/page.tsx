@@ -51,7 +51,7 @@ export default function DirectMessagesPage() {
 
   useEffect(() => {
     if (isConnected && token) {
-      authenticate(token);
+      authenticate();
     }
   }, [isConnected, token, authenticate]);
 

@@ -104,7 +104,7 @@ export default function DirectMessagePage() {
 
   useEffect(() => {
     if (isConnected && token) {
-      authenticate(token);
+      authenticate();
     }
   }, [isConnected, token, authenticate]);
 
