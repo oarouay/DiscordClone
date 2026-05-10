@@ -1,19 +1,37 @@
-import { redirect } from "next/navigation";
+"use client";
+
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { fetchChannels } from "@/lib/guilds";
 
-type Props = {
-  params: Promise<{ guildId: string }>;
-};
+export default function GuildPage() {
+  const params = useParams();
+  const router = useRouter();
+  const guildId = params?.guildId as string;
+  const [loading, setLoading] = useState(true);
 
-export default async function GuildPage({ params }: Props) {
-  const { guildId } = await params;
+  useEffect(() => {
+    if (!guildId) return;
+    fetchChannels(guildId)
+      .then((channels) => {
+        const firstChannel = channels.find((c) => c.type === "TEXT") ?? channels[0];
+        if (firstChannel) {
+          router.replace(`/guilds/${guildId}/${firstChannel.id}`);
+        } else {
+          router.replace(`/guilds/${guildId}/settings`);
+        }
+      })
+      .catch(() => router.replace(`/guilds/${guildId}/settings`))
+      .finally(() => setLoading(false));
+  }, [guildId, router]);
 
-  const channels = await fetchChannels(guildId).catch(() => []);
-  const firstChannel = channels.find((c) => c.type === "TEXT") ?? channels[0];
-
-  if (!firstChannel) {
-    return <div className="text-text-primary">No channels found in this guild</div>;
+  if (loading) {
+    return (
+      <div className="empty-state">
+        <span style={{ color: "var(--text-muted)" }}>Loading...</span>
+      </div>
+    );
   }
 
-  redirect(`/guilds/${guildId}/${firstChannel.id}`);
+  return null;
 }
