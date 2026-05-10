@@ -1,5 +1,7 @@
 package com.example.backend.channel.service;
 
+import com.example.backend.channel.dto.CreateChannelRequest;
+import com.example.backend.channel.dto.UpdateChannelRequest;
 import com.example.backend.channel.model.ChannelEntity;
 import com.example.backend.channel.model.ChannelMessageEntity;
 import com.example.backend.channel.model.ChannelType;
@@ -24,22 +26,27 @@ public class ChannelService {
     private final ChannelMessageRepository channelMessageRepository;
     private final GuildRepository guildRepository;
 
-    public ChannelService(ChannelRepository channelRepository, ChannelMessageRepository channelMessageRepository, GuildRepository guildRepository) {
+    public ChannelService(ChannelRepository channelRepository, ChannelMessageRepository channelMessageRepository,
+                          GuildRepository guildRepository) {
         this.channelRepository = channelRepository;
         this.channelMessageRepository = channelMessageRepository;
         this.guildRepository = guildRepository;
     }
 
     @Transactional
-    public ChannelEntity createChannel(String guildId, String name, ChannelType type) {
+    public ChannelEntity createChannel(String guildId, CreateChannelRequest request) {
         GuildEntity guild = guildRepository.findById(guildId)
                 .orElseThrow(() -> new NotFoundException("Guild not found"));
+
+        long position = channelRepository.countByGuildId(guildId);
 
         ChannelEntity channel = new ChannelEntity();
         channel.setId(UUID.randomUUID().toString());
         channel.setGuild(guild);
-        channel.setName(name.toLowerCase().replace(" ", "-"));
-        channel.setType(type);
+        channel.setName(request.name().toLowerCase().replace(" ", "-"));
+        channel.setType(request.type());
+        channel.setCategory(request.category());
+        channel.setPosition((int) position);
         channel.setCreatedAt(Instant.now());
 
         return channelRepository.save(channel);
@@ -47,7 +54,31 @@ public class ChannelService {
 
     @Transactional(readOnly = true)
     public List<ChannelEntity> listChannelsForGuild(String guildId) {
-        return channelRepository.findByGuildIdOrderByCreatedAtAsc(guildId);
+        return channelRepository.findByGuildIdOrderByPositionAsc(guildId);
+    }
+
+    @Transactional
+    public ChannelEntity updateChannel(String channelId, UpdateChannelRequest request) {
+        ChannelEntity channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> new NotFoundException("Channel not found"));
+
+        if (request.name() != null && !request.name().isBlank()) {
+            channel.setName(request.name().toLowerCase().replace(" ", "-"));
+        }
+        if (request.type() != null) {
+            channel.setType(request.type());
+        }
+
+        return channelRepository.save(channel);
+    }
+
+    @Transactional
+    public void deleteChannel(String channelId) {
+        ChannelEntity channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> new NotFoundException("Channel not found"));
+
+        channelMessageRepository.deleteAllByChannelId(channelId);
+        channelRepository.delete(channel);
     }
 
     @Transactional(readOnly = true)
@@ -55,11 +86,11 @@ public class ChannelService {
         if (!channelRepository.existsById(channelId)) {
             throw new NotFoundException("Channel not found");
         }
-        
+
         List<ChannelMessageEntity> messages = channelMessageRepository
                 .findByChannelIdOrderByCreatedAtDesc(channelId, PageRequest.of(page, size))
                 .getContent();
-        
+
         List<ChannelMessageEntity> modifiableMessages = new java.util.ArrayList<>(messages);
         java.util.Collections.reverse(modifiableMessages);
         return modifiableMessages;
