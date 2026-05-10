@@ -8,9 +8,11 @@ import { InviteModal } from "@/components/guild/InviteModal";
 import type { Channel } from "@/types";
 
 export function ChannelSidebar({
+  guildName,
   bottomSlot,
   onJoinVoice,
 }: {
+  guildName: string;
   bottomSlot?: React.ReactNode;
   onJoinVoice?: (channelName: string, guildName: string) => void;
 }) {
@@ -51,7 +53,7 @@ export function ChannelSidebar({
       <ChannelList
         channels={channels}
         guildId={guildId}
-        guildName={guildId}
+        guildName={guildName}
         isPublic={true}
         currentChannelId={channelId}
         onCreateChannel={handleCreateChannel}
@@ -60,7 +62,7 @@ export function ChannelSidebar({
         bottomSlot={bottomSlot}
       />
       {showInvite && (
-        <InviteModal guildId={guildId} guildName={guildId} onClose={() => setShowInvite(false)} />
+        <InviteModal guildId={guildId} guildName={guildName} onClose={() => setShowInvite(false)} />
       )}
     </div>
   );
