@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { mockGuilds, mockRoles, mockMembers } from "@/lib/mock";
+import { mockRoles, mockMembers } from "@/lib/mock";
+import { fetchGuild, deleteGuild, updateGuild } from "@/lib/guilds";
 import { PERMISSIONS, PERMISSION_LABELS } from "@/lib/permissions";
 import { hasPermission } from "@/lib/utils";
-import type { Role, Member } from "@/types";
+import type { Guild, Role, Member } from "@/types";
 import type { PermissionKey } from "@/lib/permissions";
 import { Trash2 } from "lucide-react";
 
@@ -16,11 +17,12 @@ export default function GuildSettingsPage() {
   const router = useRouter();
   const guildId = params?.guildId as string;
 
-  const guild = mockGuilds.find((g) => g.id === guildId);
+  const [guild, setGuild] = useState<Guild | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const [activeTab, setActiveTab] = useState<Tab>("general");
-  const [guildName, setGuildName] = useState(guild?.name ?? "");
-  const [guildIcon, setGuildIcon] = useState(guild?.iconUrl ?? "");
+  const [guildName, setGuildName] = useState("");
+  const [guildIcon, setGuildIcon] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
   const [deleteError, setDeleteError] = useState("");
@@ -38,10 +40,24 @@ export default function GuildSettingsPage() {
   const [newRoleColor, setNewRoleColor] = useState("#5865f2");
 
   useEffect(() => {
-    if (!guild) {
-      router.replace("/channels/me");
-    }
-  }, [guild, router]);
+    if (!guildId) return;
+    fetchGuild(guildId)
+      .then((g) => {
+        setGuild(g);
+        setGuildName(g.name);
+        setGuildIcon(g.iconUrl ?? "");
+      })
+      .catch(() => router.replace("/channels/me"))
+      .finally(() => setLoading(false));
+  }, [guildId, router]);
+
+  if (loading) {
+    return (
+      <div className="settings-page">
+        <p style={{ color: "var(--text-muted)" }}>Loading...</p>
+      </div>
+    );
+  }
 
   if (!guild) {
     return null;
@@ -49,10 +65,13 @@ export default function GuildSettingsPage() {
 
   const selectedRole = roles.find((r) => r.id === selectedRoleId) ?? null;
 
-  function handleSaveGuildSettings() {
-    // TODO: Replace with API call to PATCH /guilds/:guildId
-    guild!.name = guildName;
-    guild!.iconUrl = guildIcon;
+  async function handleSaveGuildSettings() {
+    try {
+      const updated = await updateGuild(guildId, { name: guildName, iconUrl: guildIcon });
+      setGuild(updated);
+    } catch (err) {
+      console.error("Failed to save guild settings:", err);
+    }
   }
 
   function handleIconUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -66,19 +85,21 @@ export default function GuildSettingsPage() {
     }
   }
 
-  function handleDeleteGuild() {
+  async function handleDeleteGuild() {
     if (deletePassword !== "password") {
       setDeleteError("Incorrect password");
       return;
     }
-    // TODO: Replace with API call to DELETE /guilds/:guildId
-    mockGuilds.splice(mockGuilds.indexOf(guild!), 1);
-    router.push("/channels/me");
+    try {
+      await deleteGuild(guildId);
+      router.push("/channels/me");
+    } catch (err) {
+      setDeleteError("Failed to delete guild");
+    }
   }
 
   function handleCreateRole() {
     if (!newRoleName.trim()) return;
-    // TODO: replace with API call to POST /guilds/:guildId/roles
     const role: Role = {
       id: String(Date.now()),
       guildId,
@@ -92,7 +113,6 @@ export default function GuildSettingsPage() {
   }
 
   function handleDeleteRole(roleId: string) {
-    // TODO: replace with API call to DELETE /guilds/:guildId/roles/:roleId
     setRoles((prev) => prev.filter((r) => r.id !== roleId));
     if (selectedRoleId === roleId) {
       setSelectedRoleId(roles.find((r) => r.id !== roleId)?.id ?? null);
@@ -101,7 +121,6 @@ export default function GuildSettingsPage() {
 
   function handleTogglePermission(permission: number) {
     if (!selectedRole) return;
-    // TODO: replace with API call to PATCH /guilds/:guildId/roles/:roleId
     const updated = hasPermission(selectedRole.permissions, permission)
       ? selectedRole.permissions & ~permission
       : selectedRole.permissions | permission;
@@ -111,7 +130,6 @@ export default function GuildSettingsPage() {
   }
 
   function handleAssignRole(memberId: string, roleId: string) {
-    // TODO: replace with API call to POST /guilds/:guildId/members/:memberId/roles
     const role = roles.find((r) => r.id === roleId);
     if (!role) return;
     setMembers((prev) =>
@@ -164,7 +182,6 @@ export default function GuildSettingsPage() {
             <div className="settings-general-container">
               <h2 className="settings-section-heading">Server Settings</h2>
               
-              {/* Icon */}
               <div className="settings-form-group">
                 <label className="settings-form-label">
                   Server Icon
@@ -199,7 +216,6 @@ export default function GuildSettingsPage() {
                 </div>
               </div>
 
-              {/* Server Name */}
               <div className="settings-form-group">
                 <label className="settings-form-label">
                   Server Name
@@ -212,7 +228,6 @@ export default function GuildSettingsPage() {
                 />
               </div>
 
-              {/* Save Button */}
               <button
                 onClick={handleSaveGuildSettings}
                 className="settings-save-btn"
@@ -220,7 +235,6 @@ export default function GuildSettingsPage() {
                 Save Changes
               </button>
 
-              {/* Delete Server */}
               <div className="settings-danger-zone">
                 <h3 className="settings-danger-title">
                   Danger Zone
@@ -233,7 +247,6 @@ export default function GuildSettingsPage() {
                   Delete Server
                 </button>
 
-                {/* Delete Modal */}
                 {showDeleteModal && (
                   <div
                     className="settings-modal-overlay"
