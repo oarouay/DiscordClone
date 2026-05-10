@@ -93,6 +93,17 @@ public class GuildService {
         ownerMember.setRoles(roles);
         guildMemberRepository.save(ownerMember);
 
+        // Default #general channel
+        com.example.backend.channel.model.ChannelEntity generalChannel = new com.example.backend.channel.model.ChannelEntity();
+        generalChannel.setId(UUID.randomUUID().toString());
+        generalChannel.setGuild(guild);
+        generalChannel.setName("general");
+        generalChannel.setType(com.example.backend.channel.model.ChannelType.TEXT);
+        generalChannel.setCategory("Rooms");
+        generalChannel.setPosition(0);
+        generalChannel.setCreatedAt(Instant.now());
+        channelRepository.save(generalChannel);
+        
         return GuildResponse.fromEntity(guild);
     }
 
