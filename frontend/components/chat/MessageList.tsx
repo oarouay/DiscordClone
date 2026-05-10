@@ -1,12 +1,18 @@
 "use client";
 
-import type { Message } from "@/types";
+import type { Message, GuildMessage } from "@/types";
 import { MessageCircle } from "lucide-react";
 import MessageItem from "./MessageItem";
 import { useLayoutEffect, useEffect, useRef } from "react";
 
+type MessageLike = Message | GuildMessage;
+
+function getAuthor(msg: MessageLike) {
+  return "author" in msg ? msg.author : msg.sender;
+}
+
 interface MessageListProps {
-  messages: Message[];
+  messages: MessageLike[];
   isLoading?: boolean;
   currentUserId?: string;
   onEdit?: (messageId: string, newContent: string) => void;
@@ -54,7 +60,7 @@ export default function MessageList({ messages, isLoading = false, currentUserId
             color: "var(--text-secondary)",
           }}
         >
-          Connecting…
+          Connecting...
         </span>
       </div>
     );
@@ -95,7 +101,7 @@ export default function MessageList({ messages, isLoading = false, currentUserId
     >
       {messages.map((message, index) => {
         const previousMessage = index > 0 ? messages[index - 1] : null;
-        const hideUserInfo = previousMessage?.author.id === message.author.id;
+        const hideUserInfo = previousMessage ? getAuthor(previousMessage).id === getAuthor(message).id : false;
         return (
           <MessageItem
             key={message.id}

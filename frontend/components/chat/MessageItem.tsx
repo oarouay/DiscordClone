@@ -1,16 +1,26 @@
 import { useState, useRef, useEffect } from "react";
 import { Edit2, Trash2, Check, X } from "lucide-react";
-import type { Message } from "@/types";
+import type { Message, GuildMessage } from "@/types";
 import { Avatar } from "@/components/shared/Avatar";
 import { MessageAttachments } from "./MessageAttachments";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 
+type MessageLike = Message | GuildMessage;
+
 interface MessageItemProps {
-  message: Message;
+  message: MessageLike;
   currentUserId?: string;
   hideUserInfo?: boolean;
   onEdit?: (messageId: string, newContent: string) => void;
   onDelete?: (messageId: string) => void;
+}
+
+function getAuthor(msg: MessageLike) {
+  return "author" in msg ? msg.author : msg.sender;
+}
+
+function getAttachments(msg: MessageLike) {
+  return "attachments" in msg ? msg.attachments : undefined;
 }
 
 function formatTimeAgo(date: Date): string {
@@ -32,7 +42,9 @@ export default function MessageItem({ message, currentUserId, hideUserInfo = fal
   const [editValue, setEditValue] = useState(message.content);
   const editRef = useRef<HTMLTextAreaElement>(null);
 
-  const isOwn = currentUserId === message.author.id;
+  const author = getAuthor(message);
+  const attachments = getAttachments(message);
+  const isOwn = currentUserId === author.id;
   const timestamp = new Date(message.createdAt);
   const timeAgo = formatTimeAgo(timestamp);
 
@@ -77,11 +89,11 @@ export default function MessageItem({ message, currentUserId, hideUserInfo = fal
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       role="article"
-      aria-label={`Message from ${message.author.displayName} at ${timeAgo}`}
+      aria-label={`Message from ${author.displayName} at ${timeAgo}`}
     >
       {!hideUserInfo && (
         <div style={{ paddingTop: 2, flexShrink: 0, display: "flex" }}>
-          <Avatar user={message.author} size="lg" />
+          <Avatar user={author} size="lg" />
         </div>
       )}
 
@@ -89,7 +101,7 @@ export default function MessageItem({ message, currentUserId, hideUserInfo = fal
         {!hideUserInfo && (
           <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 3 }}>
             <span style={{ fontSize: 15, fontWeight: 600, color: "var(--text-primary)", lineHeight: 1 }}>
-              {message.author.displayName}
+              {author.displayName}
             </span>
             <span style={{ fontSize: 11, color: "var(--text-muted)", lineHeight: 1 }}>
               {timeAgo}
@@ -140,8 +152,8 @@ export default function MessageItem({ message, currentUserId, hideUserInfo = fal
             <div style={{ fontSize: 15, color: "var(--text-secondary)", lineHeight: 1.55, wordBreak: "break-word", whiteSpace: "pre-wrap" }}>
               <MarkdownRenderer content={message.content} />
             </div>
-            {message.attachments && message.attachments.length > 0 && (
-              <MessageAttachments attachments={message.attachments} />
+            {attachments && attachments.length > 0 && (
+              <MessageAttachments attachments={attachments} />
             )}
           </>
         )}

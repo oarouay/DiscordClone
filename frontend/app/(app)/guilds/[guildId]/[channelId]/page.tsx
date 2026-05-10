@@ -10,13 +10,14 @@ import { VoiceChannel } from "@/components/voice/VoiceChannel";
 import MessageList from "@/components/chat/MessageList";
 import MessageInput from "@/components/chat/MessageInput";
 import { MemberList } from "@/components/guild/MemberList";
+import { useGuildWebSocket } from "@/hooks/useGuildWebSocket";
 import {
   fetchChannels,
   fetchChannelMessages,
   fetchGuildMembers,
   sendGuildMessage,
 } from "@/lib/guilds";
-import type { GuildMessage, Channel, GuildMember, Message } from "@/types";
+import type { GuildMessage, Channel, GuildMember } from "@/types";
 
 export default function ChannelPage() {
   const params = useParams();
@@ -30,7 +31,6 @@ export default function ChannelPage() {
 
   const channel = channels.find((c) => c.id === channelId);
 
-  // Fetch channels + members for this guild
   useEffect(() => {
     if (!guildId) return;
     setLoading(true);
@@ -43,7 +43,6 @@ export default function ChannelPage() {
       .finally(() => setLoading(false));
   }, [guildId]);
 
-  // Fetch messages for this channel
   useEffect(() => {
     if (!channelId || !guildId) return;
     fetchChannelMessages(guildId, channelId)
@@ -51,22 +50,33 @@ export default function ChannelPage() {
       .catch((err) => console.error("Failed to load messages:", err));
   }, [guildId, channelId]);
 
-  // Send message via REST (WebSocket for guild channels in Commit 4)
+  const handleWebSocketMessage = useCallback((message: GuildMessage) => {
+    if (message.channelId === channelId) {
+      setMessages((prev) => [...prev, message]);
+    }
+  }, [channelId]);
+
+  const { isConnected, send: wsSend } = useGuildWebSocket({
+    channelId,
+    onMessage: handleWebSocketMessage,
+  });
+
   const handleSendMessage = useCallback(
     async (content: string, files: File[]) => {
       if (!guildId || !channelId) return;
-      try {
-        // TODO: handle file attachments via multipart/form-data
-        await sendGuildMessage(guildId, channelId, { content });
-      } catch (err) {
-        console.error("Failed to send message:", err);
+      const sent = wsSend(content);
+      if (!sent) {
+        try {
+          await sendGuildMessage(guildId, channelId, { content });
+        } catch (err) {
+          console.error("Failed to send message:", err);
+        }
       }
     },
-    [guildId, channelId],
+    [guildId, channelId, wsSend],
   );
 
   const handleEditMessage = (messageId: string, newContent: string) => {
-    // TODO: Replace with API call when backend edit endpoint is implemented
     setMessages((prev) =>
       prev.map((m) =>
         m.id === messageId
@@ -77,11 +87,9 @@ export default function ChannelPage() {
   };
 
   const handleDeleteMessage = (messageId: string) => {
-    // TODO: Replace with API call when backend delete endpoint is implemented
     setMessages((prev) => prev.filter((m) => m.id !== messageId));
   };
 
-  // Loading state
   if (loading) {
     return (
       <div className="empty-state">
@@ -90,7 +98,6 @@ export default function ChannelPage() {
     );
   }
 
-  // Channel not found
   if (!channel) {
     return (
       <div className="empty-state">
@@ -109,7 +116,6 @@ export default function ChannelPage() {
     );
   }
 
-  // Voice channel
   if (channel.type === "VOICE") {
     return (
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -122,13 +128,11 @@ export default function ChannelPage() {
     );
   }
 
-  // Text channel
   const channelIcon =
     channel.type === "TEXT" ? <MessageCircle size={18} /> : <Mic size={18} />;
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      {/* Header */}
       <div
         style={{
           height: 52,
@@ -159,14 +163,26 @@ export default function ChannelPage() {
             {channel.category || "Text Channel"}
           </div>
         </div>
+        {isConnected && (
+          <span
+            style={{
+              fontSize: 11,
+              fontWeight: 500,
+              color: "var(--success)",
+              background: "rgba(61,220,151,0.1)",
+              padding: "3px 10px",
+              borderRadius: 99,
+            }}
+          >
+            Live
+          </span>
+        )}
       </div>
 
-      {/* Content area */}
       <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
-        {/* Chat */}
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
           <MessageList
-            messages={messages as unknown as Message[]}
+            messages={messages}
             currentUserId={mockUser.id}
             onEdit={handleEditMessage}
             onDelete={handleDeleteMessage}
@@ -178,8 +194,7 @@ export default function ChannelPage() {
           />
         </div>
 
-        {/* Member list */}
-        {members.length > 0 && <MemberList members={members as any} />}
+        {members.length > 0 && <MemberList members={members} />}
       </div>
     </div>
   );

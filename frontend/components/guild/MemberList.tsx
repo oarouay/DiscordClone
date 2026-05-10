@@ -1,118 +1,53 @@
 "use client";
 
-import type { Member } from "@/types";
+import type { Member, GuildMember } from "@/types";
 import { Avatar } from "@/components/shared/Avatar";
-import { StatusBadge } from "@/components/shared/StatusBadge";
+
+type MemberLike = Member | GuildMember;
 
 interface MemberListProps {
-  members: Member[];
+  members: MemberLike[];
+}
+
+function getMemberData(m: MemberLike) {
+  if ("user" in m) {
+    const member = m as Member;
+    return {
+      id: member.userId,
+      displayName: member.user.displayName,
+      username: member.user.username,
+      status: member.user.status,
+      avatarUrl: member.user.avatarUrl,
+      role: "MEMBER" as const,
+    };
+  }
+  const gm = m as GuildMember;
+  return {
+    id: gm.userId,
+    displayName: gm.displayName,
+    username: gm.username,
+    status: "offline" as const,
+    avatarUrl: gm.avatarUrl,
+    role: gm.role,
+  };
 }
 
 export function MemberList({ members }: MemberListProps) {
-  const membersByStatus = {
-    online:  members.filter((m) => m.user.status === "online"),
-    idle:    members.filter((m) => m.user.status === "idle"),
-    dnd:     members.filter((m) => m.user.status === "dnd"),
-    offline: members.filter((m) => m.user.status === "offline"),
-  };
+  const enriched = members.map(getMemberData);
 
-  const statusDotColor = {
-    online:  "var(--success)",
-    idle:    "var(--warning)",
-    dnd:     "var(--danger)",
-    offline: "var(--text-muted)",
-  };
+  const roleOrder = ["OWNER", "ADMIN", "MOD", "MEMBER"] as const;
+  const grouped = roleOrder
+    .map((role) => ({
+      role,
+      members: enriched.filter((m) => m.role === role),
+    }))
+    .filter((g) => g.members.length > 0);
 
-  const renderMemberGroup = (status: "online" | "idle" | "dnd" | "offline", memberList: Member[]) => {
-    if (memberList.length === 0) return null;
-
-    const statusLabels = { online: "Online", idle: "Idle", dnd: "Do Not Disturb", offline: "Offline" };
-
-    return (
-      <div key={status}>
-        {/* Group label */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "12px 8px 5px",
-            fontSize: 10,
-            fontWeight: 600,
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
-            color: "var(--text-muted)",
-            userSelect: "none",
-          }}
-        >
-          {statusLabels[status]}
-          <span style={{ color: "var(--text-muted)" }}>— {memberList.length}</span>
-          <span style={{ flex: 1, height: 1, background: "var(--border)" }} />
-        </div>
-
-        {/* Member rows */}
-        {memberList.map((member) => (
-          <div
-            key={member.userId}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              padding: "6px 8px",
-              borderRadius: "var(--radius-sm)",
-              cursor: "pointer",
-              transition: "background 0.1s",
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-hover)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-          >
-            {/* Avatar with status dot */}
-            <div style={{ position: "relative", flexShrink: 0 }}>
-              <Avatar user={member.user} size="sm" />
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: -1,
-                  right: -1,
-                  width: 10,
-                  height: 10,
-                  borderRadius: "50%",
-                  background: statusDotColor[member.user.status],
-                  border: "2px solid var(--bg-secondary)",
-                }}
-              />
-            </div>
-
-            {/* Name + username */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div
-                style={{
-                  fontSize: 13,
-                  fontWeight: 500,
-                  color: status === "offline" ? "var(--text-muted)" : "var(--text-primary)",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {member.user.displayName}
-              </div>
-              <div
-                style={{
-                  fontSize: 11,
-                  color: "var(--text-muted)",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                @{member.user.username}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
+  const roleColors: Record<string, string> = {
+    OWNER: "var(--accent)",
+    ADMIN: "var(--danger)",
+    MOD: "var(--success)",
+    MEMBER: "var(--text-primary)",
   };
 
   return (
@@ -128,7 +63,6 @@ export function MemberList({ members }: MemberListProps) {
         overflow: "hidden",
       }}
     >
-      {/* Header */}
       <div
         style={{
           height: 52,
@@ -166,12 +100,86 @@ export function MemberList({ members }: MemberListProps) {
         </span>
       </div>
 
-      {/* List */}
       <div style={{ flex: 1, overflowY: "auto", padding: "10px 6px" }}>
-        {renderMemberGroup("online",  membersByStatus.online)}
-        {renderMemberGroup("idle",    membersByStatus.idle)}
-        {renderMemberGroup("dnd",     membersByStatus.dnd)}
-        {renderMemberGroup("offline", membersByStatus.offline)}
+        {grouped.map(({ role, members: roleMembers }) => (
+          <div key={role}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "12px 8px 5px",
+                fontSize: 10,
+                fontWeight: 600,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                color: "var(--text-muted)",
+                userSelect: "none",
+              }}
+            >
+              {role}
+              <span style={{ color: "var(--text-muted)" }}>— {roleMembers.length}</span>
+              <span style={{ flex: 1, height: 1, background: "var(--border)" }} />
+            </div>
+
+            {roleMembers.map((member) => (
+              <div
+                key={member.id}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: "6px 8px",
+                  borderRadius: "var(--radius-sm)",
+                  cursor: "pointer",
+                  transition: "background 0.1s",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-hover)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+              >
+                <div style={{ position: "relative", flexShrink: 0 }}>
+                  <Avatar
+                    user={{
+                      id: member.id,
+                      username: member.username,
+                      displayName: member.displayName,
+                      email: "",
+                      status: member.status,
+                      avatarUrl: member.avatarUrl,
+                    }}
+                    size="sm"
+                  />
+                </div>
+
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: roleColors[role] || "var(--text-primary)",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {member.displayName}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: "var(--text-muted)",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                  @{member.username}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
       </div>
     </div>
   );
