@@ -13,8 +13,6 @@ export type User = {
   email: string;
   status: "online" | "idle" | "dnd" | "offline";
   avatarUrl?: string;
-  isAdmin?: boolean;
-  timeoutUntil?: string;
 };
 
 export type Role = {
@@ -39,8 +37,8 @@ export type Channel = {
   name: string;
   type: "TEXT" | "VOICE";
   category?: string;
-  subType?: "ANNOUNCEMENTS" | "FORUMS" | "DEFAULT";
   position: number;
+  createdAt: string;
 };
 
 export type Guild = {
@@ -49,13 +47,11 @@ export type Guild = {
   description?: string;
   iconUrl?: string;
   ownerId: string;
+  guildType: "HOUSE" | "CRIB";
+  isPrivate: boolean;
   memberCount: number;
+  owner: User;
   createdAt: string;
-  // existing UI fields
-  guildType?: "HOUSE" | "CRIB";
-  isPrivate?: boolean;
-  channels?: Channel[];
-  members?: Member[];
 };
 
 export type Message = {
@@ -72,12 +68,10 @@ export type Message = {
 export type GuildMessage = {
   id: string;
   channelId: string;
-  senderId: string;
-  senderUsername: string;
-  senderDisplayName: string;
-  senderAvatarUrl?: string;
+  sender: User;
   content: string;
-  timestamp: string;
+  createdAt: string;
+  editedAt?: string;
 };
 
 export type GuildMember = {
@@ -117,6 +111,7 @@ export type CreateGuildPayload = {
   name: string;
   description?: string;
   iconUrl?: string;
+  guildType?: "HOUSE" | "CRIB";
 };
 
 export type UpdateGuildPayload = {
@@ -128,6 +123,7 @@ export type UpdateGuildPayload = {
 export type CreateChannelPayload = {
   name: string;
   type: ChannelType;
+  category?: string;
 };
 
 export type UpdateChannelPayload = {

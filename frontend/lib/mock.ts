@@ -41,10 +41,10 @@ const mockUser5: User = {
 };
 
 export const mockChannels: Channel[] = [
-  { id: "101", guildId: "1", name: "general",       type: "TEXT",  category: "Rooms", subType: "DEFAULT",       position: 0 },
-  { id: "102", guildId: "1", name: "announcements", type: "TEXT",  category: "Rooms", subType: "ANNOUNCEMENTS", position: 1 },
-  { id: "103", guildId: "1", name: "general",       type: "VOICE", category: "Calls",                           position: 2 },
-  { id: "104", guildId: "1", name: "gaming",        type: "VOICE", category: "Calls",                           position: 3 },
+  { id: "101", guildId: "1", name: "general",       type: "TEXT",  category: "Rooms", position: 0, createdAt: "2025-04-01T00:00:00Z" },
+  { id: "102", guildId: "1", name: "announcements", type: "TEXT",  category: "Rooms", position: 1, createdAt: "2025-04-01T00:00:00Z" },
+  { id: "103", guildId: "1", name: "general",       type: "VOICE", category: "Calls", position: 2, createdAt: "2025-04-01T00:00:00Z" },
+  { id: "104", guildId: "1", name: "gaming",        type: "VOICE", category: "Calls", position: 3, createdAt: "2025-04-01T00:00:00Z" },
 ];
 
 export const mockRoles: Role[] = [
@@ -151,11 +151,13 @@ export const mockGuilds: Guild[] = [
   {
     id: "1",
     name: "Test Server",
+    description: "A test guild",
     ownerId: "1",
     guildType: "HOUSE",
     isPrivate: true,
-    channels: mockChannels,
-    members: mockMembers,
+    memberCount: mockMembers.length,
+    owner: mockUser,
+    createdAt: new Date().toISOString(),
   },
 ];
 

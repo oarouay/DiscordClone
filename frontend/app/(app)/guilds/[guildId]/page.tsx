@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { mockGuilds } from "@/lib/mock";
+import { fetchChannels } from "@/lib/guilds";
 
 type Props = {
   params: Promise<{ guildId: string }>;
@@ -7,14 +7,13 @@ type Props = {
 
 export default async function GuildPage({ params }: Props) {
   const { guildId } = await params;
-  
-  // Find the guild and get the first channel
-  const guild = mockGuilds.find((g) => g.id === guildId);
-  const firstChannel = guild?.channels[0];
-  
+
+  const channels = await fetchChannels(guildId).catch(() => []);
+  const firstChannel = channels.find((c) => c.type === "TEXT") ?? channels[0];
+
   if (!firstChannel) {
-    return <div className="text-text-primary">Guild not found</div>;
+    return <div className="text-text-primary">No channels found in this guild</div>;
   }
-  
+
   redirect(`/guilds/${guildId}/${firstChannel.id}`);
 }

@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { mockGuilds, mockChannels, mockMembers } from "@/lib/mock";
+import { fetchMyGuilds, createGuild } from "@/lib/guilds";
 import { GuildSidebar } from "@/components/guild/GuildSidebar";
 import { ChannelSidebar } from "@/components/channel/ChannelSidebar";
 import { UserPanel } from "@/components/shared/UserPanel";
@@ -36,36 +36,35 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       router.replace("/login");
       return;
     }
-    Promise.resolve().then(() => {
-      setGuilds(mockGuilds);
-      if (mockGuilds.length > 0) {
-        const firstGuild = mockGuilds[0];
-        const firstTextChannel = firstGuild.channels.find((c) => c.type === "TEXT");
-        setSelectedGuildId(firstGuild.id);
-        const isGuildRoute = /^\/guilds\/\w+/.test(pathname);
-        const isDMRoute = pathname.startsWith("/channels/me");
-        if (!isGuildRoute && !isDMRoute && firstTextChannel) {
-          router.push(`/guilds/${firstGuild.id}/${firstTextChannel.id}`);
+    fetchMyGuilds()
+      .then((data) => {
+        setGuilds(data);
+        if (data.length > 0) {
+          const firstGuild = data[0];
+          setSelectedGuildId(firstGuild.id);
+          const isGuildRoute = /^\/guilds\/\w+/.test(pathname);
+          const isDMRoute = pathname.startsWith("/channels/me");
+          if (!isGuildRoute && !isDMRoute) {
+            router.push(`/guilds/${firstGuild.id}`);
+          }
         }
-      }
-      setIsLoadingGuilds(false);
-    });
+      })
+      .catch((err) => console.error("Failed to load guilds:", err))
+      .finally(() => setIsLoadingGuilds(false));
   }, [user, isLoading, router, pathname]);
 
   const handleCreateGuild = async (name: string, guildType: "HOUSE" | "CRIB") => {
-    // TODO: replace with API call to POST /guilds
-    const guildId = String(Date.now());
-    const newGuild: Guild = {
-      id: guildId, name, guildType, isPrivate: guildType === "HOUSE", ownerId: user?.id || "1",
-      channels: [mockChannels.find((c) => c.category === "Rooms")!, mockChannels.find((c) => c.category === "Calls")!].map((c) => ({ ...c, guildId })),
-      members: mockMembers.map((m) => ({ ...m, guildId })),
-    };
-    setGuilds((prev) => [...prev, newGuild]);
-    mockGuilds.push(newGuild);
-    setSelectedGuildId(newGuild.id);
+    try {
+      const newGuild = await createGuild({ name, guildType });
+      setGuilds((prev) => [...prev, newGuild]);
+      setSelectedGuildId(newGuild.id);
+      router.push(`/guilds/${newGuild.id}`);
+    } catch (err) {
+      console.error("Failed to create guild:", err);
+    }
   };
 
-    const handleSelectGuild = (guildId: string) => {
+  const handleSelectGuild = (guildId: string) => {
     if (!guildId) {
       if (!pathname.startsWith("/channels/me")) {
         router.push("/channels/me");
@@ -73,9 +72,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       return;
     }
     setSelectedGuildId(guildId);
-    const guild = guilds.find((g) => g.id === guildId);
-    const firstTextChannel = guild?.channels.find((c) => c.type === "TEXT");
-    router.push(firstTextChannel ? `/guilds/${guildId}/${firstTextChannel.id}` : `/guilds/${guildId}`);
+    router.push(`/guilds/${guildId}`);
   };
 
   const isOnDMPage = pathname.includes("/channels/me");

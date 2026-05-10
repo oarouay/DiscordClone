@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, usePathname } from "next/navigation";
-import { mockGuilds } from "@/lib/mock";
+import { fetchChannels, createChannel } from "@/lib/guilds";
 import { ChannelList } from "./ChannelList";
 import { InviteModal } from "@/components/guild/InviteModal";
 import type { Channel } from "@/types";
@@ -19,26 +19,26 @@ export function ChannelSidebar({
   const guildId = params?.guildId as string | undefined;
   const channelId = params?.channelId as string | undefined;
   const [showInvite, setShowInvite] = useState(false);
+  const [channels, setChannels] = useState<Channel[]>([]);
 
-  const guild = mockGuilds.find((g) => g.id === guildId);
+  useEffect(() => {
+    if (!guildId) return;
+    fetchChannels(guildId)
+      .then(setChannels)
+      .catch((err) => console.error("Failed to load channels:", err));
+  }, [guildId]);
 
   const handleCreateChannel = async (name: string, type: "TEXT" | "VOICE", category: string) => {
-    if (guild) {
-      const newChannel: Channel = {
-        id: String(Date.now()),
-        guildId: guild.id,
-        name,
-        type,
-        category,
-        subType: type === "TEXT" ? "DEFAULT" : undefined,
-        position: guild.channels.length,
-      };
-      guild.channels.push(newChannel);
+    if (!guildId) return;
+    try {
+      const newChannel = await createChannel(guildId, { name, type, category });
+      setChannels((prev) => [...prev, newChannel]);
+    } catch (err) {
+      console.error("Failed to create channel:", err);
     }
   };
 
-  // No guild — only render bottom slot
-  if (!guild) {
+  if (!guildId) {
     return (
       <div className="channel-sidebar">
         {bottomSlot && <div className="channel-bottom-slot">{bottomSlot}</div>}
@@ -49,10 +49,10 @@ export function ChannelSidebar({
   return (
     <div className="channel-sidebar">
       <ChannelList
-        channels={guild.channels}
-        guildId={guild.id}
-        guildName={guild.name}
-        isPublic={!guild.isPrivate}
+        channels={channels}
+        guildId={guildId}
+        guildName={guildId}
+        isPublic={true}
         currentChannelId={channelId}
         onCreateChannel={handleCreateChannel}
         onInvite={() => setShowInvite(true)}
@@ -60,7 +60,7 @@ export function ChannelSidebar({
         bottomSlot={bottomSlot}
       />
       {showInvite && (
-        <InviteModal guildId={guild.id} guildName={guild.name} onClose={() => setShowInvite(false)} />
+        <InviteModal guildId={guildId} guildName={guildId} onClose={() => setShowInvite(false)} />
       )}
     </div>
   );

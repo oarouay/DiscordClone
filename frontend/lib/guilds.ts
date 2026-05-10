@@ -19,7 +19,7 @@ export async function createGuild(payload: CreateGuildPayload): Promise<Guild> {
 }
 
 export async function fetchMyGuilds(): Promise<Guild[]> {
-  return api.get<Guild[]>('/guilds');
+  return api.get<Guild[]>('/guilds/me');
 }
 
 export async function fetchGuild(guildId: string): Promise<Guild> {

@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { api } from "@/lib/api";
+import { joinGuild, fetchGuild } from "@/lib/guilds";
 import { useAuth } from "@/context/AuthContext";
-import { mockGuilds } from "@/lib/mock";
 import type { Guild } from "@/types";
 
 export default function InvitePage() {
@@ -27,15 +26,10 @@ export default function InvitePage() {
 
     async function fetchInvite() {
       try {
-        // TODO: replace with API call to GET /invites/:code
-        const found = mockGuilds.find((g) =>
-          g.channels.some(() => code === "abc123")
-        );
-        if (found) {
-          setGuild(found);
-        } else {
-          setError("This invite link is invalid or has expired.");
-        }
+        const joinedGuild = await joinGuild(code);
+        setGuild(joinedGuild);
+      } catch {
+        setError("This invite link is invalid or has expired.");
       } finally {
         setIsLoadingGuild(false);
       }
@@ -50,8 +44,9 @@ export default function InvitePage() {
     setError("");
 
     try {
-      // TODO: replace with API call to POST /invites/:code/join
-      const firstTextChannel = guild.channels.find((c) => c.type === "TEXT");
+      const { fetchChannels } = await import("@/lib/guilds");
+      const channels = await fetchChannels(guild.id);
+      const firstTextChannel = channels.find((c) => c.type === "TEXT");
       if (firstTextChannel) {
         router.replace(`/guilds/${guild.id}/${firstTextChannel.id}`);
       } else {
@@ -96,7 +91,7 @@ export default function InvitePage() {
         <p className="invite-card-label">You have been invited to join</p>
         <h1 className="invite-card-title">{guild?.name}</h1>
         <p className="invite-card-subtitle">
-          {guild?.members.length ?? 0} members
+          {guild?.memberCount ?? 0} members
         </p>
         <button
           className="invite-action-btn"
