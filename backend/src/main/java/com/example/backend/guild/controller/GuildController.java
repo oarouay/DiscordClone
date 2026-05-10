@@ -23,7 +23,7 @@ public class GuildController {
     public ResponseEntity<GuildResponse> createGuild(
             @AuthenticationPrincipal UserEntity currentUser,
             @RequestBody GuildCreateRequest request) {
-        GuildEntity guild = guildService.createGuild(currentUser, request.name(), request.iconUrl());
+        GuildEntity guild = guildService.createGuild(currentUser, request);
         return ResponseEntity.ok(GuildResponse.fromEntity(guild));
     }
 

@@ -27,13 +27,16 @@ public class GuildService {
     }
 
     @Transactional
-    public GuildEntity createGuild(UserEntity owner, String name, String iconUrl) {
+    public GuildEntity createGuild(UserEntity owner, com.example.backend.guild.dto.GuildCreateRequest request) {
         // 1. Create the Guild Base
         GuildEntity guild = new GuildEntity();
         guild.setId(UUID.randomUUID().toString());
         guild.setOwner(owner);
-        guild.setName(name);
-        guild.setIconUrl(iconUrl);
+        guild.setName(request.name());
+        guild.setDescription(request.description());
+        guild.setIconUrl(request.iconUrl());
+        guild.setGuildType(request.guildType() != null ? request.guildType() : GuildType.HOUSE);
+        guild.setPrivate(request.guildType() != null && request.guildType() == GuildType.HOUSE);
         guild.setCreatedAt(Instant.now());
         guild = guildRepository.save(guild);
 

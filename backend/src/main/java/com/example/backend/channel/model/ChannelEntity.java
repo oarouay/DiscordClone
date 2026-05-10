@@ -22,6 +22,11 @@ public class ChannelEntity {
     @Column(nullable = false)
     private ChannelType type;
 
+    private String category;
+
+    @Column(nullable = false)
+    private int position;
+
     @Column(nullable = false)
     private Instant createdAt;
 
@@ -36,6 +41,12 @@ public class ChannelEntity {
 
     public ChannelType getType() { return type; }
     public void setType(ChannelType type) { this.type = type; }
+
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
+
+    public int getPosition() { return position; }
+    public void setPosition(int position) { this.position = position; }
 
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }

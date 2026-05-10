@@ -16,7 +16,16 @@ public class GuildEntity {
     @Column(nullable = false)
     private String name;
 
+    private String description;
+
     private String iconUrl;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private GuildType guildType;
+
+    @Column(nullable = false)
+    private boolean isPrivate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
@@ -31,16 +40,23 @@ public class GuildEntity {
     @OneToMany(mappedBy = "guild", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<GuildMemberEntity> members = new ArrayList<>();
 
-    // Getters and Setters
-
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
     public String getIconUrl() { return iconUrl; }
     public void setIconUrl(String iconUrl) { this.iconUrl = iconUrl; }
+
+    public GuildType getGuildType() { return guildType; }
+    public void setGuildType(GuildType guildType) { this.guildType = guildType; }
+
+    public boolean isPrivate() { return isPrivate; }
+    public void setPrivate(boolean aPrivate) { isPrivate = aPrivate; }
 
     public UserEntity getOwner() { return owner; }
     public void setOwner(UserEntity owner) { this.owner = owner; }

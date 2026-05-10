@@ -9,6 +9,8 @@ public record ChannelResponse(
         String guildId,
         String name,
         ChannelType type,
+        String category,
+        int position,
         Instant createdAt
 ) {
     public static ChannelResponse fromEntity(ChannelEntity entity) {
@@ -17,6 +19,8 @@ public record ChannelResponse(
                 entity.getGuild().getId(),
                 entity.getName(),
                 entity.getType(),
+                entity.getCategory(),
+                entity.getPosition(),
                 entity.getCreatedAt()
         );
     }
