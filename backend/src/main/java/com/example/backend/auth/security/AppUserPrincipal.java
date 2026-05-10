@@ -10,46 +10,38 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 public class AppUserPrincipal implements UserDetails {
 
-    private final String id;
-    private final String email;
-    private final String passwordHash;
-    private final String username;
-    private final String displayName;
-    private final UserStatus status;
-    private final String avatarUrl;
+    private final UserEntity user;
 
     public AppUserPrincipal(UserEntity user) {
-        this.id = user.getId();
-        this.email = user.getEmail();
-        this.passwordHash = user.getPasswordHash();
-        this.username = user.getUsername();
-        this.displayName = user.getDisplayName();
-        this.status = user.getStatus();
-        this.avatarUrl = user.getAvatarUrl();
+        this.user = user;
+    }
+
+    public UserEntity getUser() {
+        return user;
     }
 
     public String getId() {
-        return id;
+        return user.getId();
     }
 
     public String getEmail() {
-        return email;
+        return user.getEmail();
     }
 
     public String getAppUsername() {
-        return username;
+        return user.getUsername();
     }
 
     public String getDisplayName() {
-        return displayName;
+        return user.getDisplayName();
     }
 
     public UserStatus getStatus() {
-        return status;
+        return user.getStatus();
     }
 
     public String getAvatarUrl() {
-        return avatarUrl;
+        return user.getAvatarUrl();
     }
 
     @Override
@@ -59,12 +51,12 @@ public class AppUserPrincipal implements UserDetails {
 
     @Override
     public String getPassword() {
-        return passwordHash;
+        return user.getPasswordHash();
     }
 
     @Override
     public String getUsername() {
-        return email;
+        return user.getEmail();
     }
 
     @Override
@@ -87,4 +79,3 @@ public class AppUserPrincipal implements UserDetails {
         return true;
     }
 }
-

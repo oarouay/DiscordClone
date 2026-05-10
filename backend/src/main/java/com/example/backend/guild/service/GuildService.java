@@ -44,7 +44,7 @@ public class GuildService {
     }
 
     @Transactional
-    public GuildEntity createGuild(UserEntity owner, GuildCreateRequest request) {
+    public GuildResponse createGuild(UserEntity owner, GuildCreateRequest request) {
         GuildEntity guild = new GuildEntity();
         guild.setId(UUID.randomUUID().toString());
         guild.setOwner(owner);
@@ -56,7 +56,6 @@ public class GuildService {
         guild.setCreatedAt(Instant.now());
         guild = guildRepository.save(guild);
 
-        // @everyone role
         long everyonePermissions = GuildPermission.SEND_MESSAGES.getValue()
                 | GuildPermission.VIEW_CHANNEL.getValue()
                 | GuildPermission.READ_MESSAGE_HISTORY.getValue()
@@ -73,7 +72,6 @@ public class GuildService {
         everyoneRole.setHoist(false);
         everyoneRole = roleRepository.save(everyoneRole);
 
-        // Owner role
         RoleEntity ownerRole = new RoleEntity();
         ownerRole.setId(UUID.randomUUID().toString());
         ownerRole.setGuild(guild);
@@ -84,7 +82,6 @@ public class GuildService {
         ownerRole.setHoist(true);
         ownerRole = roleRepository.save(ownerRole);
 
-        // Owner as member
         GuildMemberEntity ownerMember = new GuildMemberEntity();
         ownerMember.setId(UUID.randomUUID().toString());
         ownerMember.setGuild(guild);
@@ -96,7 +93,7 @@ public class GuildService {
         ownerMember.setRoles(roles);
         guildMemberRepository.save(ownerMember);
 
-        return guild;
+        return GuildResponse.fromEntity(guild);
     }
 
     @Transactional(readOnly = true)

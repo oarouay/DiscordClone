@@ -1,15 +1,14 @@
 package com.example.backend.guild.controller;
 
+import com.example.backend.auth.security.AppUserPrincipal;
 import com.example.backend.guild.dto.*;
 import com.example.backend.guild.model.GuildEntity;
 import com.example.backend.guild.service.GuildService;
-import com.example.backend.user.model.UserEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/guilds")
@@ -23,82 +22,82 @@ public class GuildController {
 
     @PostMapping
     public ResponseEntity<GuildResponse> createGuild(
-            @AuthenticationPrincipal UserEntity currentUser,
+            @AuthenticationPrincipal AppUserPrincipal principal,
             @RequestBody GuildCreateRequest request) {
-        GuildEntity guild = guildService.createGuild(currentUser, request);
-        return ResponseEntity.ok(GuildResponse.fromEntity(guild));
+        GuildResponse guild = guildService.createGuild(principal.getUser(), request);
+        return ResponseEntity.ok(guild);
     }
 
     @GetMapping("/me")
     public ResponseEntity<List<GuildResponse>> listMyGuilds(
-            @AuthenticationPrincipal UserEntity currentUser) {
-        List<GuildResponse> guilds = guildService.listGuildsForUser(currentUser);
+            @AuthenticationPrincipal AppUserPrincipal principal) {
+        List<GuildResponse> guilds = guildService.listGuildsForUser(principal.getUser());
         return ResponseEntity.ok(guilds);
     }
 
     @GetMapping("/{guildId}")
     public ResponseEntity<GuildResponse> getGuild(
-            @AuthenticationPrincipal UserEntity currentUser,
+            @AuthenticationPrincipal AppUserPrincipal principal,
             @PathVariable String guildId) {
-        GuildResponse guild = guildService.getGuildDetails(guildId, currentUser);
+        GuildResponse guild = guildService.getGuildDetails(guildId, principal.getUser());
         return ResponseEntity.ok(guild);
     }
 
     @PutMapping("/{guildId}")
     public ResponseEntity<GuildResponse> updateGuild(
-            @AuthenticationPrincipal UserEntity currentUser,
+            @AuthenticationPrincipal AppUserPrincipal principal,
             @PathVariable String guildId,
             @RequestBody UpdateGuildRequest request) {
-        GuildResponse guild = guildService.updateGuild(guildId, currentUser, request);
+        GuildResponse guild = guildService.updateGuild(guildId, principal.getUser(), request);
         return ResponseEntity.ok(guild);
     }
 
     @DeleteMapping("/{guildId}")
     public ResponseEntity<Void> deleteGuild(
-            @AuthenticationPrincipal UserEntity currentUser,
+            @AuthenticationPrincipal AppUserPrincipal principal,
             @PathVariable String guildId) {
-        guildService.deleteGuild(guildId, currentUser);
+        guildService.deleteGuild(guildId, principal.getUser());
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{guildId}/leave")
     public ResponseEntity<Void> leaveGuild(
-            @AuthenticationPrincipal UserEntity currentUser,
+            @AuthenticationPrincipal AppUserPrincipal principal,
             @PathVariable String guildId) {
-        guildService.leaveGuild(guildId, currentUser);
+        guildService.leaveGuild(guildId, principal.getUser());
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{guildId}/invite")
     public ResponseEntity<InviteResponse> generateInvite(
-            @AuthenticationPrincipal UserEntity currentUser,
+            @AuthenticationPrincipal AppUserPrincipal principal,
             @PathVariable String guildId) {
-        InviteResponse invite = guildService.generateInvite(guildId, currentUser);
+        InviteResponse invite = guildService.generateInvite(guildId, principal.getUser());
         return ResponseEntity.ok(invite);
     }
 
     @PostMapping("/join/{inviteCode}")
     public ResponseEntity<GuildResponse> joinGuild(
-            @AuthenticationPrincipal UserEntity currentUser,
+            @AuthenticationPrincipal AppUserPrincipal principal,
             @PathVariable String inviteCode) {
-        GuildResponse guild = guildService.joinGuild(inviteCode, currentUser);
+        GuildResponse guild = guildService.joinGuild(inviteCode, principal.getUser());
         return ResponseEntity.ok(guild);
     }
 
     @GetMapping("/{guildId}/members")
     public ResponseEntity<List<GuildMemberResponse>> listMembers(
-            @AuthenticationPrincipal UserEntity currentUser,
+            @AuthenticationPrincipal AppUserPrincipal principal,
             @PathVariable String guildId) {
-        List<GuildMemberResponse> members = guildService.listMembers(guildId, currentUser);
+        List<GuildMemberResponse> members = guildService.listMembers(guildId, principal.getUser());
         return ResponseEntity.ok(members);
     }
 
     @DeleteMapping("/{guildId}/members/{userId}")
     public ResponseEntity<Void> kickMember(
-            @AuthenticationPrincipal UserEntity currentUser,
+            @AuthenticationPrincipal AppUserPrincipal principal,
             @PathVariable String guildId,
             @PathVariable String userId) {
-        guildService.kickMember(guildId, userId, currentUser);
+        guildService.kickMember(guildId, userId, principal.getUser());
         return ResponseEntity.noContent().build();
     }
 }

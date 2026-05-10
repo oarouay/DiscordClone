@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { mockGuilds, mockRoles, mockMembers } from "@/lib/mock";
 import { PERMISSIONS, PERMISSION_LABELS } from "@/lib/permissions";
@@ -24,7 +24,7 @@ export default function GuildSettingsPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
   const [deleteError, setDeleteError] = useState("");
-  
+
   const [roles, setRoles] = useState<Role[]>(
     mockRoles.filter((r) => r.guildId === guildId)
   );
@@ -37,8 +37,13 @@ export default function GuildSettingsPage() {
   const [newRoleName, setNewRoleName] = useState("");
   const [newRoleColor, setNewRoleColor] = useState("#5865f2");
 
+  useEffect(() => {
+    if (!guild) {
+      router.replace("/channels/me");
+    }
+  }, [guild, router]);
+
   if (!guild) {
-    router.replace("/channels/me");
     return null;
   }
 
