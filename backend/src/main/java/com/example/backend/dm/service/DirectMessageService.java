@@ -44,8 +44,15 @@ public class DirectMessageService {
     public List<DirectMessageConversationResponse> listConversations(UserEntity currentUser) {
         List<FriendResponse> friends = friendService.getFriends(currentUser);
         
-        java.util.Map<String, DirectMessageEntity> latestMessagesByFriend = directMessageRepository
-                .findLatestMessagesForUser(currentUser.getId())
+        List<DirectMessageEntity> latestMessages = directMessageRepository
+                .findLatestMessagesForUser(currentUser.getId());
+
+        latestMessages.forEach(msg -> {
+            msg.getSender().getId();
+            msg.getRecipient().getId();
+        });
+
+        java.util.Map<String, DirectMessageEntity> latestMessagesByFriend = latestMessages
                 .stream()
                 .collect(java.util.stream.Collectors.toMap(
                         msg -> msg.getSender().getId().equals(currentUser.getId()) 
